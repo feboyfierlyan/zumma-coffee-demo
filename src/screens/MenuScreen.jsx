@@ -401,7 +401,7 @@ export default function MenuScreen() {
 
 
       {/* Menu Section */}
-      <div style={{ padding: '0 16px' }}>
+      <div style={{ padding: '0 16px', paddingBottom: 'calc(140px + env(safe-area-inset-bottom))' }}>
         {categoriesToRender.map(category => {
           const categoryItems = mockMenu.filter(item => {
             if (item.category !== category) return false;
