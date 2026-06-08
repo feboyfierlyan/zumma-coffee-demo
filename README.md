@@ -1,16 +1,71 @@
-# React + Vite
+# Zumma Coffee Demo
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern, progressive web application (PWA) built for Zumma Coffee to provide a seamless digital menu and ordering experience. Engineered with a focus on high-performance rendering, fluid micro-interactions, and robust cross-device compatibility, particularly optimized for iOS Safari edge cases.
 
-Currently, two official plugins are available:
+## Live Application
+The production build is continuously deployed and accessible at:
+https://zumma-coffee-demo.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Demonstration
+A comprehensive walkthrough of the application's core user flows is available in the repository:
+[Zumma Coffee - DEMO.mov](./Zumma%20Coffee%20-%20DEMO.mov)
 
-## React Compiler
+## Architecture Overview
+The application is structured as a Single Page Application (SPA) utilizing modern React and Vite for optimal build and development speed. 
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Key architectural decisions include:
+*   State Management: Context API for localized cart and order tracking, ensuring immediate UI reflection without heavy global stores.
+*   Animation Engine: Framer Motion employed for declarative, physics-based micro-interactions, ensuring consistent 60fps frame rates across devices.
+*   Scroll Hijacking Prevention: Lenis implemented for smooth scroll behavior without overriding native accessibility features.
+*   Viewport Handling: Dynamic Viewport Height (dvh) utilized globally alongside CSS bleed techniques to circumvent iOS Safari's floating address bar layout shifts.
 
-## Expanding the ESLint configuration
+## Core Features
+*   Progressive Web App (PWA) integration for native-like installation and offline asset caching.
+*   Responsive UI scaling with skeleton loading states for perceived performance optimization.
+*   Client-side order persistence, maintaining active session state post-checkout.
+*   Categorized menu navigation with real-time search filtering.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Development Setup
+
+### Prerequisites
+*   Node.js (v18.0.0 or higher recommended)
+*   npm (v9.0.0 or higher)
+
+### Installation
+Clone the repository and install dependencies:
+
+```bash
+git clone https://github.com/feboyfierlyan/zumma-coffee-demo.git
+cd zumma-coffee-demo
+npm install
+```
+
+### Local Development
+Start the Vite development server:
+
+```bash
+npm run dev
+```
+
+The application will be available at `http://localhost:5173`. 
+
+### Production Build
+Generate an optimized production build:
+
+```bash
+npm run build
+```
+
+To preview the production build locally:
+
+```bash
+npm run preview
+```
+
+## Deployment
+This project is configured for seamless deployment on Vercel. Pushes to the `main` branch automatically trigger a production rebuild. The architecture strictly adheres to Vercel's SPA routing configuration standards.
+
+## Code Standards
+*   Component Structure: Functional components with React Hooks.
+*   Styling: Vanilla CSS with custom property (variable) themes for scalable dark/light mode implementation.
+*   Performance: Image optimization pipeline integrated (WebP format prioritized) to minimize network payload.
