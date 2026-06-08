@@ -8,7 +8,7 @@ export const mockMenu = [
     price: 31000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/honeycomb-latte.png'
+    image: '/honeycomb-latte.webp'
   },
   {
     id: 'm2',
@@ -17,7 +17,7 @@ export const mockMenu = [
     price: 35000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/hazel-almond.png'
+    image: '/hazel-almond.webp'
   },
   {
     id: 'm3',
@@ -26,7 +26,7 @@ export const mockMenu = [
     price: 26000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/burnt-caramel-latte.png'
+    image: '/burnt-caramel-latte.webp'
   },
   {
     id: 'm4',
@@ -35,7 +35,7 @@ export const mockMenu = [
     price: 29000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/sea-salt-butterscotch.png'
+    image: '/sea-salt-butterscotch.webp'
   },
   {
     id: 'm5',
@@ -44,7 +44,7 @@ export const mockMenu = [
     price: 29000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/aerated.png'
+    image: '/aerated.webp'
   },
   {
     id: 'm6',
@@ -53,7 +53,7 @@ export const mockMenu = [
     price: 24000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/cappuccino.png'
+    image: '/cappuccino.webp'
   },
   {
     id: 'm7',
@@ -62,7 +62,7 @@ export const mockMenu = [
     price: 20000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/americano.png'
+    image: '/americano.webp'
   },
   {
     id: 'm8',
@@ -71,7 +71,7 @@ export const mockMenu = [
     price: 24000,
     category: 'Minuman',
     subcategory: 'Coffee',
-    image: '/caffe-latte.png'
+    image: '/caffe-latte.webp'
   },
   // Matcha
   {
@@ -81,7 +81,7 @@ export const mockMenu = [
     price: 32000,
     category: 'Minuman',
     subcategory: 'Matcha',
-    image: '/coconut-matcha-velvet.png'
+    image: '/coconut-matcha-velvet.webp'
   },
   {
     id: 'm10',
@@ -90,7 +90,7 @@ export const mockMenu = [
     price: 30000,
     category: 'Minuman',
     subcategory: 'Matcha',
-    image: '/dirty-matcha.png'
+    image: '/dirty-matcha.webp'
   },
   {
     id: 'm11',
@@ -99,7 +99,7 @@ export const mockMenu = [
     price: 29000,
     category: 'Minuman',
     subcategory: 'Matcha',
-    image: '/signature-matcha.png'
+    image: '/signature-matcha.webp'
   },
   // Tea & Mocktail
   {
@@ -109,7 +109,7 @@ export const mockMenu = [
     price: 25000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/muscat-grape.png'
+    image: '/muscat-grape.webp'
   },
   {
     id: 'm13',
@@ -118,7 +118,7 @@ export const mockMenu = [
     price: 24000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/heritage-honeydew.png'
+    image: '/heritage-honeydew.webp'
   },
   {
     id: 'm14',
@@ -127,7 +127,7 @@ export const mockMenu = [
     price: 22000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/tropical-summer.png'
+    image: '/tropical-summer.webp'
   },
   {
     id: 'm15',
@@ -136,7 +136,7 @@ export const mockMenu = [
     price: 26000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/thai-tea-salty-cream.png'
+    image: '/thai-tea-salty-cream.webp'
   },
   {
     id: 'm16',
@@ -145,7 +145,7 @@ export const mockMenu = [
     price: 18000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/hot-tea.png'
+    image: '/hot-tea.webp'
   },
   {
     id: 'm18',
@@ -154,7 +154,7 @@ export const mockMenu = [
     price: 18000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/mango-tea.png'
+    image: '/mango-tea.webp'
   },
   {
     id: 'm19',
@@ -163,7 +163,7 @@ export const mockMenu = [
     price: 18000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/lychee-tea.png'
+    image: '/lychee-tea.webp'
   },
   {
     id: 'm20',
@@ -172,7 +172,7 @@ export const mockMenu = [
     price: 18000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
-    image: '/peach-tea.png'
+    image: '/peach-tea.webp'
   },
   // Chocolate
   {
@@ -182,7 +182,7 @@ export const mockMenu = [
     price: 26000,
     category: 'Minuman',
     subcategory: 'Chocolate',
-    image: '/dark-choco-latte.png'
+    image: '/dark-choco-latte.webp'
   },
   // Kombucha
   {
@@ -192,7 +192,7 @@ export const mockMenu = [
     price: 22000,
     category: 'Minuman',
     subcategory: 'Kombucha',
-    image: '/original-kombucha.png'
+    image: '/original-kombucha.webp'
   },
   {
     id: 'm22',
@@ -201,7 +201,7 @@ export const mockMenu = [
     price: 27000,
     category: 'Minuman',
     subcategory: 'Kombucha',
-    image: '/peach-kombucha.png'
+    image: '/peach-kombucha.webp'
   },
   {
     id: 'm23',
@@ -210,7 +210,7 @@ export const mockMenu = [
     price: 26000,
     category: 'Minuman',
     subcategory: 'Kombucha',
-    image: '/mango-kombucha.png'
+    image: '/mango-kombucha.webp'
   },
 
   // === MAKANAN (FOOD) ===
@@ -222,7 +222,7 @@ export const mockMenu = [
     price: 55000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/loco-moco-salted-egg.png'
+    image: '/loco-moco-salted-egg.webp'
   },
   {
     id: 'f2',
@@ -231,7 +231,7 @@ export const mockMenu = [
     price: 35000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/shoyu-grilled-chicken.png'
+    image: '/shoyu-grilled-chicken.webp'
   },
   {
     id: 'f3',
@@ -240,7 +240,7 @@ export const mockMenu = [
     price: 49000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/beef-bulgogi-bowl.png'
+    image: '/beef-bulgogi-bowl.webp'
   },
   {
     id: 'f4',
@@ -249,7 +249,7 @@ export const mockMenu = [
     price: 44000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/chicken-karaage-spicy-cheese.png'
+    image: '/chicken-karaage-spicy-cheese.webp'
   },
   {
     id: 'f5',
@@ -258,7 +258,7 @@ export const mockMenu = [
     price: 45000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/chicken-karaage-italian-mozato.png'
+    image: '/chicken-karaage-italian-mozato.webp'
   },
   {
     id: 'f6',
@@ -267,7 +267,7 @@ export const mockMenu = [
     price: 45000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/chicken-karaage-gochujang.png'
+    image: '/chicken-karaage-gochujang.webp'
   },
   {
     id: 'f8',
@@ -276,7 +276,7 @@ export const mockMenu = [
     price: 39000,
     category: 'Makanan',
     subcategory: 'Rice Bowls',
-    image: '/japanese-beef-curry.png'
+    image: '/japanese-beef-curry.webp'
   },
   // Noodles & Pasta
   {
@@ -286,7 +286,7 @@ export const mockMenu = [
     price: 33000,
     category: 'Makanan',
     subcategory: 'Noodles & Pasta',
-    image: '/dan-dan-mian.png'
+    image: '/dan-dan-mian.webp'
   },
   {
     id: 'f9',
@@ -295,7 +295,7 @@ export const mockMenu = [
     price: 33000,
     category: 'Makanan',
     subcategory: 'Noodles & Pasta',
-    image: '/mie-ayam-djakarta.png'
+    image: '/mie-ayam-djakarta.webp'
   },
   {
     id: 'f10',
@@ -304,7 +304,7 @@ export const mockMenu = [
     price: 37000,
     category: 'Makanan',
     subcategory: 'Noodles & Pasta',
-    image: '/aglio-e-olio-shrimp-salted-egg.png'
+    image: '/aglio-e-olio-shrimp-salted-egg.webp'
   },
   {
     id: 'f11',
@@ -313,7 +313,7 @@ export const mockMenu = [
     price: 37000,
     category: 'Makanan',
     subcategory: 'Noodles & Pasta',
-    image: '/arrabbiata-meatball-pasta.png'
+    image: '/arrabbiata-meatball-pasta.webp'
   },
   {
     id: 'f12',
@@ -322,7 +322,7 @@ export const mockMenu = [
     price: 37000,
     category: 'Makanan',
     subcategory: 'Noodles & Pasta',
-    image: '/aglio-e-olio-tuna-cherry-tomato.png'
+    image: '/aglio-e-olio-tuna-cherry-tomato.webp'
   },
   {
     id: 'f13',
@@ -331,7 +331,7 @@ export const mockMenu = [
     price: 37000,
     category: 'Makanan',
     subcategory: 'Noodles & Pasta',
-    image: '/truffle-mushroom-spaghetti.png'
+    image: '/truffle-mushroom-spaghetti.webp'
   },
   // Pizza
   {
@@ -341,7 +341,7 @@ export const mockMenu = [
     price: 55000,
     category: 'Makanan',
     subcategory: 'Pizza',
-    image: '/salted-egg-pizza.png'
+    image: '/salted-egg-pizza.webp'
   },
   {
     id: 'f15',
@@ -350,7 +350,7 @@ export const mockMenu = [
     price: 55000,
     category: 'Makanan',
     subcategory: 'Pizza',
-    image: '/honey-spicy-pizza.png'
+    image: '/honey-spicy-pizza.webp'
   },
   {
     id: 'f16',
@@ -359,7 +359,7 @@ export const mockMenu = [
     price: 50000,
     category: 'Makanan',
     subcategory: 'Pizza',
-    image: '/margherita-pizza.png'
+    image: '/margherita-pizza.webp'
   },
   {
     id: 'f17',
@@ -368,7 +368,7 @@ export const mockMenu = [
     price: 63000,
     category: 'Makanan',
     subcategory: 'Pizza',
-    image: '/mushroom-truffle-pizza.png'
+    image: '/mushroom-truffle-pizza.webp'
   },
   {
     id: 'f18',
@@ -377,7 +377,7 @@ export const mockMenu = [
     price: 75000,
     category: 'Makanan',
     subcategory: 'Pizza',
-    image: '/beef-pizza.png'
+    image: '/beef-pizza.webp'
   },
   // Brunch & Sandwiches
   {
@@ -387,7 +387,7 @@ export const mockMenu = [
     price: 34000,
     category: 'Makanan',
     subcategory: 'Brunch & Sandwiches',
-    image: '/tomato-baked-eggs.png'
+    image: '/tomato-baked-eggs.webp'
   },
   {
     id: 'f20',
@@ -396,7 +396,7 @@ export const mockMenu = [
     price: 45000,
     category: 'Makanan',
     subcategory: 'Brunch & Sandwiches',
-    image: '/breakfast-platter.png'
+    image: '/breakfast-platter.webp'
   },
   {
     id: 'f21',
@@ -405,7 +405,7 @@ export const mockMenu = [
     price: 36000,
     category: 'Makanan',
     subcategory: 'Brunch & Sandwiches',
-    image: '/creamy-mushroom-toast.png'
+    image: '/creamy-mushroom-toast.webp'
   },
   {
     id: 'f22',
@@ -414,7 +414,7 @@ export const mockMenu = [
     price: 38000,
     category: 'Makanan',
     subcategory: 'Brunch & Sandwiches',
-    image: '/beef-ham-sando.png'
+    image: '/beef-ham-sando.webp'
   },
   {
     id: 'f23',
@@ -423,7 +423,7 @@ export const mockMenu = [
     price: 38000,
     category: 'Makanan',
     subcategory: 'Brunch & Sandwiches',
-    image: '/tuna-sando.png'
+    image: '/tuna-sando.webp'
   },
   {
     id: 'f24',
@@ -432,7 +432,7 @@ export const mockMenu = [
     price: 35000,
     category: 'Makanan',
     subcategory: 'Brunch & Sandwiches',
-    image: '/chicken-sando.png'
+    image: '/chicken-sando.webp'
   },
   // Salads
   {
@@ -442,7 +442,7 @@ export const mockMenu = [
     price: 48000,
     category: 'Makanan',
     subcategory: 'Salads',
-    image: '/thai-beef-salad.png'
+    image: '/thai-beef-salad.webp'
   },
   {
     id: 'f26',
@@ -451,7 +451,7 @@ export const mockMenu = [
     price: 38000,
     category: 'Makanan',
     subcategory: 'Salads',
-    image: '/italian-dressing-salad.png'
+    image: '/italian-dressing-salad.webp'
   },
   // Bites & Snacks
   {
@@ -461,7 +461,7 @@ export const mockMenu = [
     price: 33000,
     category: 'Makanan',
     subcategory: 'Bites & Snacks',
-    image: '/dirty-chips.png'
+    image: '/dirty-chips.webp'
   },
   {
     id: 'f28',
@@ -470,7 +470,7 @@ export const mockMenu = [
     price: 25000,
     category: 'Makanan',
     subcategory: 'Bites & Snacks',
-    image: '/calamari-ring.png'
+    image: '/calamari-ring.webp'
   },
   {
     id: 'f29',
@@ -479,7 +479,7 @@ export const mockMenu = [
     price: 20000,
     category: 'Makanan',
     subcategory: 'Bites & Snacks',
-    image: '/ori-fries.png'
+    image: '/ori-fries.webp'
   },
   {
     id: 'f30',
@@ -488,7 +488,7 @@ export const mockMenu = [
     price: 25000,
     category: 'Makanan',
     subcategory: 'Bites & Snacks',
-    image: '/truffle-fries.png'
+    image: '/truffle-fries.webp'
   },
   {
     id: 'f31',
@@ -497,7 +497,7 @@ export const mockMenu = [
     price: 28000,
     category: 'Makanan',
     subcategory: 'Bites & Snacks',
-    image: '/truffle-mushroom-croquette.png'
+    image: '/truffle-mushroom-croquette.webp'
   },
 
   // === DESSERT ===
@@ -508,7 +508,7 @@ export const mockMenu = [
     price: 29000,
     category: 'Dessert',
     subcategory: 'Sweet Treats',
-    image: '/hot-pan-brownies.png'
+    image: '/hot-pan-brownies.webp'
   },
   {
     id: 'd2',
@@ -517,7 +517,7 @@ export const mockMenu = [
     price: 30000,
     category: 'Dessert',
     subcategory: 'Sweet Treats',
-    image: '/sweet-potato-caramel-fla.png'
+    image: '/sweet-potato-caramel-fla.webp'
   }
 ];
 

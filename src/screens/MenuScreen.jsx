@@ -29,7 +29,7 @@ const CategoryBanner = ({ category }) => {
         style={{ 
           position: 'absolute', 
           inset: -60, 
-          backgroundImage: `url(/banner-${category.toLowerCase()}.png)`, 
+          backgroundImage: `url(/banner-${category.toLowerCase()}.webp)`, 
           backgroundSize: 'cover', 
           backgroundPosition: 'center',
           y
