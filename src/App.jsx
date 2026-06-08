@@ -52,15 +52,13 @@ function Preloader() {
           transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }} // Snappier AWWWARDS slide up ease
           style={{
             position: 'fixed',
-            top: 0, left: 0, right: 0, height: '100dvh',
+            inset: 0, // Cover entire physical screen
             backgroundColor: '#8C3322', // Updated to exact terracotta color
             zIndex: 99999,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column'
           }}
         >
+          {/* Centering Wrapper matching visible viewport */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', height: '100dvh' }}>
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -89,6 +87,7 @@ function Preloader() {
               />
             </svg>
           </motion.div>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

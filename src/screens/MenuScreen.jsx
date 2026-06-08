@@ -603,7 +603,7 @@ export default function MenuScreen() {
             transition={{ type: 'spring', stiffness: 400, damping: 28 }}
             style={{
             position: 'fixed', 
-            bottom: 'calc(24px + env(safe-area-inset-bottom))', 
+            bottom: 'calc(8px + env(safe-area-inset-bottom))', 
             left: '16px', 
             right: '16px',
             borderRadius: '28px',

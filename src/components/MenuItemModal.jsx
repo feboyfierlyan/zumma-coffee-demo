@@ -117,15 +117,18 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
           onClick={onClose}
           style={{
             position: 'fixed', top: 0, left: 0, right: 0, height: '100dvh', zIndex: 100,
-            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
             display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'
           }}
         >
-          {/* Modal Content */}
-          <motion.div 
-            onClick={(e) => e.stopPropagation()}
+          {/* Dark Overlay Bleeding */}
+          <div style={{ position: 'absolute', top: 0, bottom: '-200px', left: 0, right: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: -1 }} />
+
+          {/* Modal Container */}
+          <motion.div
             initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            style={{ position: 'relative', width: '100%' }}
+            onClick={(e) => e.stopPropagation()}
             drag="y"
             dragControls={dragControls}
             dragListener={false}
@@ -136,13 +139,15 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
                 onClose();
               }
             }}
-            style={{
-              backgroundColor: colors.bg,
-              borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
-              height: '90dvh', display: 'flex', flexDirection: 'column',
-              overflow: 'hidden', position: 'relative'
-            }}
           >
+            <div
+              style={{
+                backgroundColor: colors.bg,
+                borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
+                height: '90dvh', display: 'flex', flexDirection: 'column',
+                overflow: 'hidden', position: 'relative'
+              }}
+            >
             
             {/* Drag Handle Area */}
             <div 
@@ -375,8 +380,12 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
               <span>{formatCurrency(totalPrice)}</span>
             </motion.button>
           </div>
-        </motion.div>
+        </div>
+        
+        {/* Modal Bleeding Background */}
+        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, height: '200px', backgroundColor: colors.bg }} />
       </motion.div>
+    </motion.div>
       )}
     </AnimatePresence>
   );
