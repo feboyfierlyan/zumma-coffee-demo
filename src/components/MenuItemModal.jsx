@@ -1,0 +1,370 @@
+import React, { useState, useEffect } from 'react';
+import { X, Plus, Minus } from 'lucide-react';
+import { formatCurrency } from '../utils/format';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import ImageWithSkeleton from './ImageWithSkeleton';
+
+// Aesthetic Colors for Modal
+const colors = {
+  bg: '#FFFFFF', // Clean white
+  textPrimary: '#1A1A1A', // Stark contrast black
+  textSecondary: '#888888',
+  border: '#F0F0F0',
+  selectedBg: '#F8F8F8',
+  selectedBorder: '#1A1A1A',
+  primarySolid: '#1A1A1A' // Black for primary actions
+};
+
+const OptionButton = ({ label, selected, onClick, extra }) => (
+  <button
+    onClick={onClick}
+    style={{
+      padding: '10px 16px',
+      borderRadius: '12px',
+      border: selected ? `1px solid ${colors.selectedBorder}` : `1px solid ${colors.border}`,
+      backgroundColor: selected ? colors.selectedBg : '#FFFFFF',
+      color: selected ? colors.primarySolid : colors.textPrimary,
+      fontSize: '14px',
+      fontWeight: selected ? '500' : '400',
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '4px',
+      transition: 'all 0.2s ease-in-out',
+      WebkitTapHighlightColor: 'transparent'
+    }}
+  >
+    {label}
+    {extra && <span style={{ fontSize: '12px', color: colors.textSecondary }}>{extra}</span>}
+  </button>
+);
+
+export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
+  const [quantity, setQuantity] = useState(1);
+  const [temperature, setTemperature] = useState('Hot');
+  const [size, setSize] = useState('Regular');
+  const [milk, setMilk] = useState('Whole');
+  const [sugar, setSugar] = useState(50);
+  const [notes, setNotes] = useState('');
+
+  const [currentItem, setCurrentItem] = useState(item);
+  const dragControls = useDragControls();
+
+  useEffect(() => {
+    if (item) {
+      setCurrentItem(item);
+    }
+  }, [item]);
+
+  // Initialize state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      if (item && item.options) {
+        setQuantity(item.quantity || 1);
+        setTemperature(item.options.temperature || 'Hot');
+        setSize(item.options.size || 'Regular');
+        setMilk(item.options.milk || 'Whole');
+        setSugar(item.options.sugar ?? 50);
+        setNotes(item.options.notes || '');
+      } else {
+        setQuantity(1);
+        setTemperature('Hot');
+        setSize('Regular');
+        setMilk('Whole');
+        setSugar(50);
+        setNotes('');
+      }
+    }
+  }, [isOpen, item]);
+
+  const isDrink = currentItem?.category === 'Minuman' || currentItem?.category === 'Signature';
+  const finalPrice = currentItem?.price || 0;
+  const totalPrice = finalPrice * quantity;
+
+  const handleAdd = () => {
+    let optionsList = [];
+    if (isDrink) {
+      optionsList.push(temperature);
+      if (size === 'Large') optionsList.push('Large');
+      if (milk !== 'None') optionsList.push(`${milk} Milk`);
+      optionsList.push(`Sugar ${sugar}%`);
+    }
+    const optionsString = optionsList.join(', ');
+    
+    let finalNote = '';
+    if (optionsString && notes) finalNote = `${optionsString} | ${notes}`;
+    else if (optionsString) finalNote = optionsString;
+    else if (notes) finalNote = notes;
+
+    onAddToCart({
+      ...currentItem,
+      price: finalPrice,
+      note: finalNote,
+      quantity,
+      options: {
+        temperature, size, milk, sugar, notes
+      }
+    });
+    if (navigator.vibrate) navigator.vibrate([20, 50, 20]); // Success haptic
+    onClose();
+  };
+
+  return (
+    <AnimatePresence>
+      {isOpen && currentItem && (
+        <motion.div 
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          onClick={onClose}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
+            display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'
+          }}
+        >
+          {/* Modal Content */}
+          <motion.div 
+            onClick={(e) => e.stopPropagation()}
+            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            drag="y"
+            dragControls={dragControls}
+            dragListener={false}
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 500) {
+                onClose();
+              }
+            }}
+            style={{
+              backgroundColor: colors.bg,
+              borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
+              height: '90vh', display: 'flex', flexDirection: 'column',
+              overflow: 'hidden', position: 'relative'
+            }}
+          >
+            
+            {/* Drag Handle Area */}
+            <div 
+              onPointerDown={(e) => dragControls.start(e)}
+              style={{
+                position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', 
+                width: '100px', height: '48px', zIndex: 20,
+                display: 'flex', justifyContent: 'center', paddingTop: '12px', touchAction: 'none',
+                cursor: 'grab'
+              }}
+            >
+              <div style={{ width: '40px', height: '5px', backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: '3px' }} />
+            </div>
+            
+            {/* Close Button */}
+            <motion.button 
+              whileTap={{ scale: 0.9 }}
+          onClick={onClose}
+          style={{
+            position: 'absolute', top: '16px', right: '16px', zIndex: 10,
+            width: '36px', height: '36px', borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.9)', border: 'none',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+          }}
+        >
+          <X size={20} color={colors.textPrimary} />
+        </motion.button>
+
+        {/* Scrollable Content */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          {/* Hero Image */}
+          <div 
+            onPointerDown={(e) => dragControls.start(e)}
+            style={{
+              height: '240px', width: '100%', touchAction: 'none', cursor: 'grab',
+              position: 'relative', display: 'flex', alignItems: 'flex-end', padding: '24px',
+              overflow: 'hidden'
+            }}>
+            {/* Base Image with Skeleton */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+              <ImageWithSkeleton 
+                src={currentItem?.image || '/featured.png'} 
+                alt={currentItem?.name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                skeletonBorderRadius="0px"
+              />
+            </div>
+            
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', zIndex: 1 }} />
+            <h2 style={{
+              fontFamily: 'DM Sans, sans-serif',
+              fontWeight: '600',
+              fontSize: '28px',
+              letterSpacing: '-0.5px',
+              color: '#FFFFFF',
+              position: 'relative',
+              zIndex: 1,
+              margin: 0
+            }}>
+              {currentItem.name}
+            </h2>
+          </div>
+
+          <div style={{ padding: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.5', margin: '0 0 24px 0' }}>
+              {currentItem.description}
+            </p>
+
+            {isDrink && (
+              <>
+                {/* Temperature */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>TEMPERATURE</div>
+                  <div style={{ display: 'flex', gap: '12px' }}>
+                    <OptionButton label="Hot" selected={temperature === 'Hot'} onClick={() => setTemperature('Hot')} />
+                    <OptionButton label="Iced" selected={temperature === 'Iced'} onClick={() => setTemperature('Iced')} />
+                  </div>
+                </div>
+
+                {/* Size */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>SIZE</div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <OptionButton label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
+                    <OptionButton label="Large" selected={size === 'Large'} onClick={() => setSize('Large')} />
+                  </div>
+                </div>
+
+                {/* Milk */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>MILK</div>
+                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    {['Whole', 'Oat', 'Almond', 'None'].map(m => (
+                      <OptionButton key={m} label={m} selected={milk === m} onClick={() => setMilk(m)} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Sugar */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, fontWeight: '500' }}>SUGAR</span>
+                    <span style={{ fontSize: '14px', color: colors.textPrimary, fontWeight: '600' }}>{sugar}%</span>
+                  </div>
+                  
+                  {/* Custom Smooth Slider */}
+                  <div style={{ position: 'relative', height: '24px', display: 'flex', alignItems: 'center', marginBottom: '12px' }}>
+                    {/* Background Track */}
+                    <div style={{ position: 'absolute', left: 0, right: 0, height: '6px', backgroundColor: '#EBE3DB', borderRadius: '3px' }} />
+                    
+                    {/* Animated Filled Track */}
+                    <motion.div 
+                      animate={{ width: `${sugar}%` }}
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                      style={{ position: 'absolute', left: 0, height: '6px', backgroundColor: '#1A1A1A', borderRadius: '3px' }}
+                    />
+
+                    {/* Animated Thumb */}
+                    <motion.div
+                      animate={{ left: `${sugar}%` }}
+                      transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                      style={{
+                        position: 'absolute',
+                        width: '20px', height: '20px',
+                        backgroundColor: '#1A1A1A',
+                        borderRadius: '50%',
+                        x: '-50%', // center align thumb
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                        border: '2px solid #FFFFFF',
+                        pointerEvents: 'none' // let clicks pass through to input
+                      }}
+                    />
+
+                    {/* Invisible Native Input (Interaction Layer) */}
+                    <input 
+                      type="range" min="0" max="100" step="25"
+                      value={sugar} 
+                      onChange={(e) => {
+                        setSugar(Number(e.target.value));
+                        if (navigator.vibrate) navigator.vibrate(10);
+                      }}
+                      style={{
+                        position: 'absolute',
+                        width: '100%',
+                        height: '100%',
+                        opacity: 0,
+                        cursor: 'pointer',
+                        margin: 0,
+                        zIndex: 10,
+                        WebkitTapHighlightColor: 'transparent'
+                      }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: colors.textSecondary, fontWeight: '500' }}>
+                    <span style={{ color: sugar >= 0 ? colors.textPrimary : colors.textSecondary, transition: 'color 0.3s' }}>0%</span>
+                    <span style={{ color: sugar >= 25 ? colors.textPrimary : colors.textSecondary, transition: 'color 0.3s' }}>25%</span>
+                    <span style={{ color: sugar >= 50 ? colors.textPrimary : colors.textSecondary, transition: 'color 0.3s' }}>50%</span>
+                    <span style={{ color: sugar >= 75 ? colors.textPrimary : colors.textSecondary, transition: 'color 0.3s' }}>75%</span>
+                    <span style={{ color: sugar === 100 ? colors.textPrimary : colors.textSecondary, transition: 'color 0.3s' }}>100%</span>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Notes */}
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>NOTES</div>
+              <textarea
+                value={notes} onChange={(e) => setNotes(e.target.value)}
+                placeholder="Any special requests?"
+                style={{
+                  width: '100%', minHeight: '80px', padding: '16px',
+                  backgroundColor: '#F5EFE9', border: `1px solid ${colors.border}`,
+                  borderRadius: '12px', fontSize: '14px', color: colors.textPrimary,
+                  fontFamily: 'DM Sans', resize: 'vertical'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom Bar Fixed */}
+        <div style={{
+          padding: '16px 24px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+          borderTop: `1px solid ${colors.border}`, backgroundColor: colors.bg,
+          display: 'flex', alignItems: 'center', gap: '20px'
+        }}>
+          {/* Quantity */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: '16px',
+            backgroundColor: '#EBE3DB', borderRadius: '24px', padding: '4px 8px', height: '48px'
+          }}>
+            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+              <Minus size={16} color={colors.textPrimary} />
+            </button>
+            <span style={{ fontSize: '16px', fontWeight: '500', color: colors.primarySolid, minWidth: '16px', textAlign: 'center' }}>
+              {quantity}
+            </span>
+            <button onClick={() => setQuantity(quantity + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+              <Plus size={16} color={colors.textPrimary} />
+            </button>
+          </div>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={handleAdd}
+              className="btn-primary"
+              style={{
+                flex: 1, 
+                whiteSpace: 'nowrap'
+              }}
+            >
+              <span>{currentItem?.cartItemId ? 'Update' : 'Add to Cart'}</span>
+              <span>&bull;</span>
+              <span>{formatCurrency(totalPrice)}</span>
+            </motion.button>
+          </div>
+        </motion.div>
+      </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}

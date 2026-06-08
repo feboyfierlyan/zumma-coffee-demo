@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap');
+
+:root {
+  /* Clean White Minimalist */
+  --bg-main: #FFFFFF;
+  --surface-1: #FFFFFF;
+  --surface-2: #F8F8F8;
+  --accent-gold: #9B4A34; /* Elegant terracotta */
+  --text-primary: #1A1A1A; /* Stark contrast */
+  --text-secondary: #888888; /* Clean gray */
+  --border: #F0F0F0; /* Subtle border */
+  --error: #8B2020;
+}
+
+.dark-theme {
+  --bg-main: #1A0F08;
+  --surface-1: #2C1810;
+  --surface-2: #3D2415;
+  --accent-gold: #C07840;
+  --text-primary: #F5EDD8;
+  --text-secondary: #A08060;
+  --border: #4A2E1A;
+  --error: #8B2020;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:focus, input:focus, textarea:focus, div:focus {
+  outline: none;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Typography Utilities */
+.text-display {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 24px;
+  letter-spacing: -0.3px;
+}
+
+.text-section-title {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.text-item-name {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.text-item-desc {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+}
+
+.text-price {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--accent-gold);
+}
+
+/* Components Utilities */
+.glass {
+  background-color: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark-theme .glass {
+  background-color: rgba(26, 15, 8, 0.85);
+}
+
+.btn-primary {
+  width: 100%;
+  background-color: var(--accent-gold);
+  color: #FFFFFF; /* White text on primary for clean UI */
+  border-radius: 12px;
+  height: 52px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 14px rgba(155, 74, 52, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-secondary {
+  width: 100%;
+  background-color: transparent;
+  color: var(--accent-gold);
+  border-radius: 12px;
+  height: 52px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s ease;
+}
+
+.card {
+  background-color: var(--surface-1);
+  border-radius: 16px;
+  border: 1px solid rgba(0,0,0,0.03);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+}
+
+.app-container {
+  width: 100%;
+  min-height: 100vh;
+  position: relative;
+  background-color: var(--bg-main);
+  overflow-x: hidden;
+}
+
+.screen-transition-enter {
+  opacity: 0;
+  transform: translateX(20px);
+}
+.screen-transition-enter-active {
+  opacity: 1;
+  transform: translateX(0);
+  transition: opacity 300ms, transform 300ms;
+}
+.screen-transition-exit {
+  opacity: 1;
+}
+.screen-transition-exit-active {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Hide scrollbar for horizontal scroll areas */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
