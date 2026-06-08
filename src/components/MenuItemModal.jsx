@@ -116,7 +116,7 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           onClick={onClose}
           style={{
-            position: 'fixed', inset: 0, zIndex: 100,
+            position: 'fixed', top: 0, left: 0, right: 0, height: '100dvh', zIndex: 100,
             backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)',
             display: 'flex', flexDirection: 'column', justifyContent: 'flex-end'
           }}
@@ -139,7 +139,7 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
             style={{
               backgroundColor: colors.bg,
               borderTopLeftRadius: '32px', borderTopRightRadius: '32px',
-              height: '90vh', display: 'flex', flexDirection: 'column',
+              height: '90dvh', display: 'flex', flexDirection: 'column',
               overflow: 'hidden', position: 'relative'
             }}
           >
