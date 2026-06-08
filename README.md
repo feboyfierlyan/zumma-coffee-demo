@@ -9,7 +9,11 @@ https://zumma-coffee-demo.vercel.app
 ## Demonstration
 A comprehensive walkthrough of the application's core user flows is available in the repository:
 
-<video src="Zumma%20Coffee%20-%20DEMO.mp4" controls="controls" muted="muted"></video>
+
+
+https://github.com/user-attachments/assets/f55135a7-b76e-4526-875e-f8505140bd61
+
+
 
 ## Architecture Overview
 The application is structured as a Single Page Application (SPA) utilizing modern React and Vite for optimal build and development speed. 
