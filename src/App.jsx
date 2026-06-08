@@ -52,7 +52,7 @@ function Preloader() {
           transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }} // Snappier AWWWARDS slide up ease
           style={{
             position: 'fixed',
-            inset: 0,
+            top: 0, left: 0, right: 0, height: '100dvh',
             backgroundColor: '#8C3322', // Updated to exact terracotta color
             zIndex: 99999,
             display: 'flex',

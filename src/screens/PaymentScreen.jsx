@@ -57,7 +57,7 @@ export default function PaymentScreen() {
   return (
     <motion.div 
       initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }}
-      style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-2)' }}
+      style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-2)' }}
     >
       {/* Header */}
       <header style={{

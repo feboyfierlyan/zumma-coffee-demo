@@ -129,6 +129,7 @@ body {
 .app-container {
   width: 100%;
   min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
   background-color: var(--bg-main);
   overflow-x: hidden;

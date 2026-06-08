@@ -41,7 +41,7 @@ export default function CartScreen() {
       <motion.div
         initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }}
         style={{
-          minHeight: '100vh',
+          minHeight: '100dvh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -127,7 +127,7 @@ export default function CartScreen() {
   }
 
   return (
-    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }} style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
+    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
       {/* Navigation Header */}
       <header style={{
         height: '60px',

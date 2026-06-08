@@ -26,7 +26,7 @@ export default function SuccessScreen() {
     <motion.div 
       initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.5, ease: "easeOut" }}
       style={{ 
-        minHeight: '100vh', backgroundColor: 'var(--bg-main)', 
+        minHeight: '100dvh', backgroundColor: 'var(--bg-main)', 
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         padding: '24px'
       }}
