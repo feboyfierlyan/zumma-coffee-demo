@@ -192,25 +192,38 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
               />
             </div>
             
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', zIndex: 1 }} />
-            <h2 style={{
-              fontFamily: 'DM Sans, sans-serif',
-              fontWeight: '600',
-              fontSize: '28px',
-              letterSpacing: '-0.5px',
-              color: '#FFFFFF',
-              position: 'relative',
-              zIndex: 1,
-              margin: 0
-            }}>
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              transition={{ delay: 0.15, duration: 0.4 }}
+              style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)', zIndex: 1 }} 
+            />
+            <motion.h2 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.4 }}
+              style={{
+                fontFamily: 'DM Sans, sans-serif',
+                fontWeight: '600',
+                fontSize: '28px',
+                letterSpacing: '-0.5px',
+                color: '#FFFFFF',
+                position: 'relative',
+                zIndex: 1,
+                margin: 0
+              }}>
               {currentItem.name}
-            </h2>
+            </motion.h2>
           </div>
 
           <div style={{ padding: '24px' }}>
-            <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.5', margin: '0 0 24px 0' }}>
+            <motion.p 
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.4 }}
+              style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: '1.5', margin: '0 0 24px 0' }}>
               {currentItem.description}
-            </p>
+            </motion.p>
 
             {isDrink && (
               <>
