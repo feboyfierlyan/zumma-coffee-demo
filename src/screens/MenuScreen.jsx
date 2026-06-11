@@ -72,12 +72,8 @@ export default function MenuScreen() {
   const [isExiting, setIsExiting] = useState(false);
   const [showCartBar, setShowCartBar] = useState(false);
 
-  // Item-fly add-to-cart machinery
-  const cartIconRef = useRef(null);
-  const cartBarRef = useRef(null);
+  // Cart icon pop feedback
   const cartControls = useAnimationControls();
-  const [flyers, setFlyers] = useState([]);
-  const flyId = useRef(0);
 
   // Category pill center-scroll
   const pillStripRef = useRef(null);
@@ -131,28 +127,8 @@ export default function MenuScreen() {
 
   const handleItemClick = (item) => setSelectedItem(item);
 
-  // Clone the tapped thumbnail and let it glide into the bottom cart bar, then add to cart.
-  const quickAdd = useCallback((item, originEl) => {
-    if (originEl) {
-      const from = originEl.getBoundingClientRect();
-      const bar = cartBarRef.current;
-      // Land in the bottom cart bar; fall back to bottom-center before the bar mounts.
-      const toX = bar ? bar.getBoundingClientRect().left + 44 : window.innerWidth / 2;
-      const toY = bar
-        ? bar.getBoundingClientRect().top + bar.getBoundingClientRect().height / 2
-        : window.innerHeight - 56;
-      const dx = toX - (from.left + from.width / 2);
-      const dy = toY - (from.top + from.height / 2);
-      const id = ++flyId.current;
-      setFlyers((prev) => [...prev, {
-        id,
-        src: item.image,
-        from: { top: from.top, left: from.left, width: from.width, height: from.height },
-        dx,
-        dy,
-      }]);
-      setTimeout(() => setFlyers((prev) => prev.filter((f) => f.id !== id)), 1200);
-    }
+  // Add straight to cart with a subtle cart-icon pop (no flying clone).
+  const quickAdd = useCallback((item) => {
     if (navigator.vibrate) navigator.vibrate(18);
     addToCart({ ...item, quantity: 1 });
     cartControls.start({
@@ -193,7 +169,6 @@ export default function MenuScreen() {
         </div>
 
         <motion.button
-          ref={cartIconRef}
           whileTap={TAP}
           onClick={() => navigate('/cart')}
           style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', marginRight: '-8px' }}
@@ -329,9 +304,9 @@ export default function MenuScreen() {
         </span>
       </div>
 
-      {/* Featured rail (food is the hero) */}
+      {/* Featured rail (food is the hero) — always shown except while searching */}
       <AnimatePresence>
-        {activeCategory === 'All' && searchQuery.trim() === '' && featuredItems.length > 0 && (
+        {searchQuery.trim() === '' && featuredItems.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }}>
             <div style={{ padding: '8px 16px 4px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <h2 className="text-section-title" style={{ margin: 0 }}>Pilihan Hari Ini</h2>
@@ -363,7 +338,7 @@ export default function MenuScreen() {
                       <span style={{ color: 'var(--brand-cream)', fontSize: '14px', fontWeight: 600 }}>{formatCurrency(item.price)}</span>
                       <motion.button
                         whileTap={{ scale: 0.85 }}
-                        onClick={(e) => { e.stopPropagation(); quickAdd(item, e.currentTarget.closest('[data-fly-card]').querySelector('img')); }}
+                        onClick={(e) => { e.stopPropagation(); quickAdd(item); }}
                         style={{ width: '34px', height: '34px', borderRadius: '50%', backgroundColor: 'var(--brand-cream)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                       >
                         <Plus size={18} color="var(--brand-deep)" />
@@ -398,10 +373,10 @@ export default function MenuScreen() {
                 <motion.span
                   layoutId="activePill"
                   transition={{ duration: 0.2, ease: EASE.swift }}
-                  style={{ position: 'absolute', inset: 0, borderRadius: '24px', backgroundColor: 'var(--text-primary)', zIndex: -1 }}
+                  style={{ position: 'absolute', inset: 0, borderRadius: '24px', backgroundColor: 'var(--text-primary)', zIndex: 0 }}
                 />
               )}
-              {cat}
+              <span style={{ position: 'relative', zIndex: 1 }}>{cat}</span>
             </button>
           );
         })}
@@ -427,9 +402,9 @@ export default function MenuScreen() {
                     }}
                   >
                     {active && (
-                      <motion.span layoutId="activeSubPill" transition={{ duration: 0.2, ease: EASE.swift }} style={{ position: 'absolute', inset: 0, borderRadius: '16px', backgroundColor: 'var(--accent-gold)', zIndex: -1 }} />
+                      <motion.span layoutId="activeSubPill" transition={{ duration: 0.2, ease: EASE.swift }} style={{ position: 'absolute', inset: 0, borderRadius: '16px', backgroundColor: 'var(--accent-gold)', zIndex: 0 }} />
                     )}
-                    {subcat}
+                    <span style={{ position: 'relative', zIndex: 1 }}>{subcat}</span>
                   </button>
                 );
               })}
@@ -568,7 +543,6 @@ export default function MenuScreen() {
         {cartCount > 0 && !isExiting && showCartBar && (
           <div style={{ position: 'fixed', bottom: 'calc(10px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center', padding: '0 16px', pointerEvents: 'none' }}>
             <motion.div
-              ref={cartBarRef}
               initial={{ y: 130, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 130, opacity: 0 }}
@@ -598,38 +572,6 @@ export default function MenuScreen() {
           </div>
         )}
       </AnimatePresence>
-
-      {/* Flying clones layer */}
-      <div style={{ position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 200 }}>
-        {flyers.map((f) => (
-          <motion.img
-            key={f.id}
-            src={f.src}
-            alt=""
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
-            animate={{
-              // Phase 1 (0 → 32%): shrink in place. Phase 2 (32% → 100%): glide into the bottom bar.
-              x: [0, 0, f.dx],
-              y: [0, -14, f.dy],
-              scale: [1, 0.5, 0.2],
-              rotate: [0, -2, -7],
-              opacity: [1, 1, 0],
-            }}
-            transition={{
-              duration: 1.05,
-              ease: [0.42, 0, 0.18, 1],
-              times: [0, 0.32, 1],
-              opacity: { duration: 1.05, times: [0, 0.85, 1], ease: 'easeIn' },
-            }}
-            className="will-animate"
-            style={{
-              position: 'fixed', top: f.from.top, left: f.from.left, width: f.from.width, height: f.from.height,
-              borderRadius: '18px', objectFit: 'cover', transformOrigin: 'center center',
-              boxShadow: '0 20px 40px rgba(0,0,0,0.28)',
-            }}
-          />
-        ))}
-      </div>
 
       <MenuItemModal
         isOpen={!!selectedItem}
