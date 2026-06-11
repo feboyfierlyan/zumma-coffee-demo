@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { VENUE_CONFIG, ORDER_STEPS, PROMO_CODES } from '../config/order';
 
 const CartContext = createContext();
 
@@ -9,6 +10,9 @@ export const CartProvider = ({ children }) => {
   const [orderNote, setOrderNote] = useState('');
   const [deliveryOption, setDeliveryOption] = useState('Ambil Sendiri');
   const [activeOrder, setActiveOrder] = useState(null);
+  const [orderStep, setOrderStep] = useState(0);
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [tip, setTip] = useState(0);
 
   const addToCart = (item) => {
     setCart((prev) => {
@@ -44,45 +48,85 @@ export const CartProvider = ({ children }) => {
     });
   };
 
+  const removeFromCart = (cartItemId) => {
+    setCart((prev) => prev.filter((item) => item.cartItemId !== cartItemId));
+  };
+
   const clearCart = () => {
     setCart([]);
     setOrderNote('');
-  };
-
-  const checkout = () => {
-    const tax = cartTotal * 0.1;
-    const total = cartTotal + tax;
-    const newOrder = {
-      orderId: `B-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
-      items: [...cart],
-      total: total,
-      subtotal: cartTotal,
-      tax: tax,
-      note: orderNote,
-      deliveryOption: deliveryOption,
-      status: 'Sedang Disiapkan',
-      time: new Date().toISOString()
-    };
-    setActiveOrder(newOrder);
-    clearCart();
+    setAppliedVoucher(null);
+    setTip(0);
   };
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  // Centralized money math so Cart, Payment, and Success always agree.
+  const discount = appliedVoucher
+    ? (appliedVoucher.type === 'percent'
+        ? Math.round(cartTotal * appliedVoucher.value)
+        : appliedVoucher.value)
+    : 0;
+  const taxable = Math.max(0, cartTotal - discount);
+  const tax = taxable * VENUE_CONFIG.taxRate;
+  const total = taxable + tax + tip;
+
+  const applyVoucher = (code) => {
+    const found = PROMO_CODES[(code || '').trim().toUpperCase()];
+    if (found) {
+      setAppliedVoucher(found);
+      return true;
+    }
+    return false;
+  };
+  const clearVoucher = () => setAppliedVoucher(null);
+
+  const checkout = () => {
+    const newOrder = {
+      orderId: `B-${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`,
+      items: [...cart],
+      subtotal: cartTotal,
+      discount,
+      voucher: appliedVoucher,
+      tip,
+      tax,
+      total,
+      note: orderNote,
+      deliveryOption: deliveryOption,
+      status: ORDER_STEPS[0].label,
+      time: new Date().toISOString()
+    };
+    setActiveOrder(newOrder);
+    setOrderStep(0);
+    clearCart();
+  };
 
   return (
     <CartContext.Provider value={{ 
       cart, 
       addToCart, 
       updateQuantity, 
+      removeFromCart,
       clearCart,
       cartCount, 
       cartTotal,
+      discount,
+      tax,
+      tip,
+      setTip,
+      total,
+      taxRate: VENUE_CONFIG.taxRate,
+      appliedVoucher,
+      applyVoucher,
+      clearVoucher,
       orderNote,
       setOrderNote,
       deliveryOption,
       setDeliveryOption,
       activeOrder,
+      orderStep,
+      setOrderStep,
       checkout
     }}>
       {children}

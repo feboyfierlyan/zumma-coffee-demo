@@ -53,6 +53,26 @@ button:focus, input:focus, textarea:focus, div:focus {
   outline: none;
 }
 
+/* Keyboard / switch users get a clear focus ring; pointer users don't. */
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 body {
   font-family: 'DM Sans', sans-serif;
   background-color: var(--bg-main);

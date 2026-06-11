@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShoppingBag, MapPin, Plus, Search, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { mockMenu, mockCategories } from '../data/mockData';
 import { formatCurrency } from '../utils/format';
-import { DEFAULT_ITEM_OPTIONS, buildOptionNote } from '../utils/itemOptions';
+import { defaultOptionsFor, buildOptionNote, computeItemPrice, requiresChoice } from '../utils/itemOptions';
 import MenuItemModal from '../components/MenuItemModal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import Skeleton from '../components/Skeleton';
@@ -29,6 +29,9 @@ const FEATURED_NAMES = [
 const featuredItems = FEATURED_NAMES
   .map((name) => mockMenu.find((m) => m.name === name))
   .filter(Boolean);
+
+// Quick-tap suggestions surfaced when the search field is focused but empty.
+const POPULAR_SEARCHES = ['Latte', 'Matcha', 'Pizza', 'Kombucha', 'Brownies'];
 
 const CategoryBanner = ({ category }) => {
   const ref = React.useRef(null);
@@ -62,8 +65,10 @@ const CategoryBanner = ({ category }) => {
 export default function MenuScreen() {
   const navigate = useNavigate();
   const { cartCount, cartTotal, addToCart, cart, activeOrder } = useCart();
-  const [activeCategory, setActiveCategory] = useState('All');
-  const [activeSubcategory, setActiveSubcategory] = useState('All');
+  // Continuous menu + scroll-spy: every category renders as one long list and
+  // the sticky pills highlight whichever section is currently in view.
+  const realCategories = useMemo(() => mockCategories.filter((c) => c !== 'All'), []);
+  const [activeSection, setActiveSection] = useState(() => realCategories[0]);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -79,22 +84,57 @@ export default function MenuScreen() {
   // Category pill center-scroll
   const pillStripRef = useRef(null);
   const pillRefs = useRef({});
+  const sectionRefs = useRef({});
+  const isProgrammaticScroll = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCartBar(true), 350);
     return () => clearTimeout(timer);
   }, []);
 
+  // Keep the active pill centered in the strip as the section changes.
   useEffect(() => {
     const strip = pillStripRef.current;
-    const el = pillRefs.current[activeCategory];
+    const el = pillRefs.current[activeSection];
     if (strip && el) {
       strip.scrollTo({
         left: el.offsetLeft - strip.clientWidth / 2 + el.clientWidth / 2,
         behavior: 'smooth',
       });
     }
-  }, [activeCategory]);
+  }, [activeSection]);
+
+  // Scroll-spy: highlight the section whose heading is just under the sticky
+  // header + pills. Suppressed briefly during a pill tap so the tapped pill wins.
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (isProgrammaticScroll.current) return;
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) {
+          const cat = visible[0].target.getAttribute('data-section');
+          if (cat) setActiveSection(cat);
+        }
+      },
+      { rootMargin: '-128px 0px -55% 0px', threshold: 0 }
+    );
+    realCategories.forEach((cat) => {
+      const el = sectionRefs.current[cat];
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+  }, [realCategories]);
+
+  const scrollToSection = useCallback((cat) => {
+    const el = sectionRefs.current[cat];
+    if (!el) return;
+    setActiveSection(cat);
+    isProgrammaticScroll.current = true;
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => { isProgrammaticScroll.current = false; }, 700);
+  }, []);
 
   const handleNavigateToCart = () => {
     setIsExiting(true);
@@ -122,20 +162,24 @@ export default function MenuScreen() {
       })
     : [];
 
-  const categoriesToRender = activeCategory === 'All'
-    ? mockCategories.filter((cat) => cat !== 'All')
-    : [activeCategory];
+  const categoriesToRender = realCategories;
 
   const handleItemClick = (item) => setSelectedItem(item);
 
-  // Add straight to cart with a subtle cart-icon pop (no flying clone).
-  // Attach the same default options/note as the detail modal so both add
-  // paths produce identical cart lines (and merge correctly).
+  // Quick-add with a subtle cart-icon pop. Items with a real choice the guest
+  // must make (e.g. Hot vs Iced) open the detail sheet instead of silently
+  // defaulting; everything else adds straight to the cart with priced defaults
+  // matching the modal path (so both produce identical, mergeable cart lines).
   const quickAdd = useCallback((item) => {
+    if (requiresChoice(item)) {
+      setSelectedItem(item);
+      return;
+    }
     if (navigator.vibrate) navigator.vibrate(18);
-    const options = { ...DEFAULT_ITEM_OPTIONS };
+    const options = defaultOptionsFor(item);
     const note = buildOptionNote(item, options);
-    addToCart({ ...item, note, options, quantity: 1 });
+    const price = computeItemPrice(item, options);
+    addToCart({ ...item, price, note, options, quantity: 1 });
     cartControls.start({
       scale: [1, 1.32, 0.94, 1],
       transition: { duration: DUR.component, ease: EASE.spring },
@@ -176,6 +220,7 @@ export default function MenuScreen() {
         <motion.button
           whileTap={TAP}
           onClick={() => navigate('/cart')}
+          aria-label={`Buka keranjang${cartCount > 0 ? `, ${cartCount} item` : ''}`}
           style={{ position: 'relative', background: 'none', border: 'none', cursor: 'pointer', padding: '8px', marginRight: '-8px' }}
         >
           <motion.div animate={cartControls} className="will-animate" style={{ display: 'flex' }}>
@@ -242,6 +287,30 @@ export default function MenuScreen() {
             </button>
           )}
         </motion.div>
+
+        {/* Popular searches (shown when focused with an empty query) */}
+        <AnimatePresence>
+          {isSearchFocused && searchQuery.trim() === '' && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2, ease: EASE.swift }}
+              style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', padding: '12px 0 4px' }}
+            >
+              <span style={{ width: '100%', fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '2px' }}>Pencarian populer</span>
+              {POPULAR_SEARCHES.map((term) => (
+                <button
+                  key={term}
+                  onMouseDown={(e) => { e.preventDefault(); setSearchQuery(term); }}
+                  style={{ height: '34px', padding: '0 14px', borderRadius: '17px', border: '1px solid var(--border)', backgroundColor: 'var(--surface-1)', color: 'var(--text-primary)', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}
+                >
+                  {term}
+                </button>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Search results sheet */}
         <AnimatePresence>
@@ -357,79 +426,52 @@ export default function MenuScreen() {
         )}
       </AnimatePresence>
 
-      {/* Category pills */}
-      <div ref={pillStripRef} className="no-scrollbar" style={{ display: 'flex', overflowX: 'auto', padding: '12px 16px', gap: '10px' }}>
-        {mockCategories.map((cat) => {
-          const active = activeCategory === cat;
-          return (
-            <button
-              key={cat}
-              ref={(el) => { pillRefs.current[cat] = el; }}
-              onClick={() => { setActiveCategory(cat); setActiveSubcategory('All'); }}
-              style={{
-                position: 'relative', height: '38px', padding: '0 20px', borderRadius: '24px',
-                border: active ? '1px solid transparent' : '1px solid var(--border)',
-                backgroundColor: 'transparent', color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                fontSize: '13px', fontWeight: 600, letterSpacing: '0.3px', whiteSpace: 'nowrap',
-                cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: '0 0 auto',
-              }}
-            >
-              {active && (
-                <motion.span
-                  layoutId="activePill"
-                  transition={{ duration: 0.2, ease: EASE.swift }}
-                  style={{ position: 'absolute', inset: 0, borderRadius: '24px', backgroundColor: 'var(--text-primary)', zIndex: 0 }}
-                />
-              )}
-              <span style={{ position: 'relative', zIndex: 1 }}>{cat}</span>
-            </button>
-          );
-        })}
+      {/* Category section nav (sticky scroll-spy) */}
+      <div style={{ position: 'sticky', top: '64px', zIndex: 45, backgroundColor: '#FFFFFF', boxShadow: '0 6px 12px -8px rgba(0,0,0,0.08)' }}>
+        <div ref={pillStripRef} className="no-scrollbar" style={{ display: 'flex', overflowX: 'auto', padding: '12px 16px', gap: '10px' }}>
+          {realCategories.map((cat) => {
+            const active = activeSection === cat;
+            return (
+              <button
+                key={cat}
+                ref={(el) => { pillRefs.current[cat] = el; }}
+                onClick={() => scrollToSection(cat)}
+                aria-current={active ? 'true' : undefined}
+                style={{
+                  position: 'relative', height: '38px', padding: '0 20px', borderRadius: '24px',
+                  border: active ? '1px solid transparent' : '1px solid var(--border)',
+                  backgroundColor: 'transparent', color: active ? '#FFFFFF' : 'var(--text-secondary)',
+                  fontSize: '13px', fontWeight: 600, letterSpacing: '0.3px', whiteSpace: 'nowrap',
+                  cursor: 'pointer', WebkitTapHighlightColor: 'transparent', flex: '0 0 auto',
+                }}
+              >
+                {active && (
+                  <motion.span
+                    layoutId="activePill"
+                    transition={{ duration: 0.2, ease: EASE.swift }}
+                    style={{ position: 'absolute', inset: 0, borderRadius: '24px', backgroundColor: 'var(--text-primary)', zIndex: 0 }}
+                  />
+                )}
+                <span style={{ position: 'relative', zIndex: 1 }}>{cat}</span>
+              </button>
+            );
+          })}
+        </div>
       </div>
-
-      {/* Subcategory pills */}
-      <AnimatePresence>
-        {activeCategory !== 'All' && (
-          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
-            <div className="no-scrollbar" style={{ display: 'flex', overflowX: 'auto', padding: '0 16px 12px 16px', gap: '8px' }}>
-              {['All', ...new Set(mockMenu.filter((item) => item.category === activeCategory).map((item) => item.subcategory).filter(Boolean))].map((subcat) => {
-                const active = activeSubcategory === subcat;
-                return (
-                  <button
-                    key={subcat}
-                    onClick={() => setActiveSubcategory(subcat)}
-                    style={{
-                      position: 'relative', height: '32px', padding: '0 16px', borderRadius: '16px',
-                      border: active ? '1px solid transparent' : '1px solid var(--border)',
-                      backgroundColor: 'transparent', color: active ? '#FFFFFF' : 'var(--text-secondary)',
-                      fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer',
-                      WebkitTapHighlightColor: 'transparent', flex: '0 0 auto',
-                    }}
-                  >
-                    {active && (
-                      <motion.span layoutId="activeSubPill" transition={{ duration: 0.2, ease: EASE.swift }} style={{ position: 'absolute', inset: 0, borderRadius: '16px', backgroundColor: 'var(--accent-gold)', zIndex: 0 }} />
-                    )}
-                    <span style={{ position: 'relative', zIndex: 1 }}>{subcat}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       {/* Menu sections */}
       <div style={{ padding: '0 16px', paddingBottom: 'calc(140px + env(safe-area-inset-bottom))' }}>
         {categoriesToRender.map((category) => {
-          const categoryItems = mockMenu.filter((item) => {
-            if (item.category !== category) return false;
-            if (activeCategory !== 'All' && activeSubcategory !== 'All' && item.subcategory !== activeSubcategory) return false;
-            return true;
-          });
+          const categoryItems = mockMenu.filter((item) => item.category === category);
           if (categoryItems.length === 0) return null;
 
           return (
-            <div key={category} style={{ marginBottom: '32px' }}>
+            <div
+              key={category}
+              data-section={category}
+              ref={(el) => { sectionRefs.current[category] = el; }}
+              style={{ marginBottom: '32px', scrollMarginTop: '116px' }}
+            >
               {category === 'Makanan' || category === 'Minuman' ? (
                 <CategoryBanner category={category} />
               ) : (
@@ -525,7 +567,7 @@ export default function MenuScreen() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -120, opacity: 0 }}
               transition={SPRING.bar}
-              onClick={() => { setIsExiting(true); setTimeout(() => navigate('/success'), 250); }}
+              onClick={() => { setIsExiting(true); setTimeout(() => navigate('/status'), 250); }}
               className="will-animate"
               style={{
                 width: '100%', maxWidth: 'calc(var(--app-max) - 32px)', borderRadius: 'var(--r-lg)',

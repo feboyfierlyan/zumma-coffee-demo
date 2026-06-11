@@ -4,7 +4,7 @@ import { formatCurrency } from '../utils/format';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import ImageWithSkeleton from './ImageWithSkeleton';
 import { EASE } from '../motion';
-import { buildOptionNote, isDrinkItem } from '../utils/itemOptions';
+import { buildOptionNote, getOptionConfig, computeItemPrice, defaultOptionsFor, SIZE_DELTAS, MILK_DELTAS } from '../utils/itemOptions';
 
 // Quantity readout that slides up on increment / down on decrement.
 function SlidingNumber({ value, direction }) {
@@ -90,19 +90,21 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
         setSugar(item.options.sugar ?? 50);
         setNotes(item.options.notes || '');
       } else {
+        const d = defaultOptionsFor(item);
         setQuantity(1);
-        setTemperature('Hot');
-        setSize('Regular');
-        setMilk('Whole');
-        setSugar(50);
+        setTemperature(d.temperature);
+        setSize(d.size);
+        setMilk(d.milk);
+        setSugar(d.sugar);
         setNotes('');
       }
     }
   }, [isOpen, item]);
 
-  const isDrink = isDrinkItem(currentItem);
-  const finalPrice = currentItem?.price || 0;
+  const config = getOptionConfig(currentItem);
+  const finalPrice = computeItemPrice(currentItem, { temperature, size, milk, sugar, notes });
   const totalPrice = finalPrice * quantity;
+  const fmtDelta = (d) => (d > 0 ? `+${formatCurrency(d)}` : null);
 
   const handleAdd = () => {
     const options = { temperature, size, milk, sugar, notes };
@@ -248,36 +250,40 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
               {currentItem.description}
             </motion.p>
 
-            {isDrink && (
+            {config.temps.length > 1 && (
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>TEMPERATURE</div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  {config.temps.map((t) => (
+                    <OptionButton key={t} label={t} selected={temperature === t} onClick={() => setTemperature(t)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {config.sizes && (
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>SIZE</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  <OptionButton label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
+                  <OptionButton label="Large" extra={fmtDelta(SIZE_DELTAS.Large)} selected={size === 'Large'} onClick={() => setSize('Large')} />
+                </div>
+              </div>
+            )}
+
+            {config.milks && (
+              <div style={{ marginBottom: '24px' }}>
+                <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>MILK</div>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                  {['Whole', 'Oat', 'Almond', 'None'].map(m => (
+                    <OptionButton key={m} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {config.sugar && (
               <>
-                {/* Temperature */}
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>TEMPERATURE</div>
-                  <div style={{ display: 'flex', gap: '12px' }}>
-                    <OptionButton label="Hot" selected={temperature === 'Hot'} onClick={() => setTemperature('Hot')} />
-                    <OptionButton label="Iced" selected={temperature === 'Iced'} onClick={() => setTemperature('Iced')} />
-                  </div>
-                </div>
-
-                {/* Size */}
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>SIZE</div>
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    <OptionButton label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
-                    <OptionButton label="Large" selected={size === 'Large'} onClick={() => setSize('Large')} />
-                  </div>
-                </div>
-
-                {/* Milk */}
-                <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>MILK</div>
-                  <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                    {['Whole', 'Oat', 'Almond', 'None'].map(m => (
-                      <OptionButton key={m} label={m} selected={milk === m} onClick={() => setMilk(m)} />
-                    ))}
-                  </div>
-                </div>
-
                 {/* Sugar */}
                 <div style={{ marginBottom: '24px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -344,6 +350,7 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
                 </div>
               </>
             )}
+            {/* End option groups */}
 
             {/* Notes */}
             <div style={{ marginBottom: '32px' }}>
