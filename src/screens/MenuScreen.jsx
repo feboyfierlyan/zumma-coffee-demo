@@ -151,7 +151,7 @@ export default function MenuScreen() {
         dx,
         dy,
       }]);
-      setTimeout(() => setFlyers((prev) => prev.filter((f) => f.id !== id)), 900);
+      setTimeout(() => setFlyers((prev) => prev.filter((f) => f.id !== id)), 1200);
     }
     if (navigator.vibrate) navigator.vibrate(18);
     addToCart({ ...item, quantity: 1 });
@@ -606,18 +606,26 @@ export default function MenuScreen() {
             key={f.id}
             src={f.src}
             alt=""
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
+            initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
             animate={{
-              x: [0, f.dx * 0.5, f.dx],
-              y: [0, -28, f.dy],
-              scale: [1, 0.78, 0.34],
+              // Phase 1 (0 → 32%): shrink in place. Phase 2 (32% → 100%): glide into the bottom bar.
+              x: [0, 0, f.dx],
+              y: [0, -14, f.dy],
+              scale: [1, 0.5, 0.2],
+              rotate: [0, -2, -7],
               opacity: [1, 1, 0],
             }}
-            transition={{ duration: 0.8, ease: EASE.smoothOut, times: [0, 0.32, 1] }}
+            transition={{
+              duration: 1.05,
+              ease: [0.42, 0, 0.18, 1],
+              times: [0, 0.32, 1],
+              opacity: { duration: 1.05, times: [0, 0.85, 1], ease: 'easeIn' },
+            }}
             className="will-animate"
             style={{
               position: 'fixed', top: f.from.top, left: f.from.left, width: f.from.width, height: f.from.height,
-              borderRadius: '16px', objectFit: 'cover', boxShadow: '0 16px 32px rgba(0,0,0,0.22)',
+              borderRadius: '18px', objectFit: 'cover', transformOrigin: 'center center',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.28)',
             }}
           />
         ))}
