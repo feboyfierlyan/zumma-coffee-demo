@@ -4,6 +4,7 @@ import { ShoppingBag, MapPin, Plus, Search, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { mockMenu, mockCategories } from '../data/mockData';
 import { formatCurrency } from '../utils/format';
+import { DEFAULT_ITEM_OPTIONS, buildOptionNote } from '../utils/itemOptions';
 import MenuItemModal from '../components/MenuItemModal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import Skeleton from '../components/Skeleton';
@@ -128,9 +129,13 @@ export default function MenuScreen() {
   const handleItemClick = (item) => setSelectedItem(item);
 
   // Add straight to cart with a subtle cart-icon pop (no flying clone).
+  // Attach the same default options/note as the detail modal so both add
+  // paths produce identical cart lines (and merge correctly).
   const quickAdd = useCallback((item) => {
     if (navigator.vibrate) navigator.vibrate(18);
-    addToCart({ ...item, quantity: 1 });
+    const options = { ...DEFAULT_ITEM_OPTIONS };
+    const note = buildOptionNote(item, options);
+    addToCart({ ...item, note, options, quantity: 1 });
     cartControls.start({
       scale: [1, 1.32, 0.94, 1],
       transition: { duration: DUR.component, ease: EASE.spring },
@@ -304,9 +309,9 @@ export default function MenuScreen() {
         </span>
       </div>
 
-      {/* Featured rail (food is the hero) — always shown except while searching */}
+      {/* Featured rail (food is the hero) — always shown for consistency */}
       <AnimatePresence>
-        {searchQuery.trim() === '' && featuredItems.length > 0 && (
+        {featuredItems.length > 0 && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, height: 0 }}>
             <div style={{ padding: '8px 16px 4px', display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <h2 className="text-section-title" style={{ margin: 0 }}>Pilihan Hari Ini</h2>

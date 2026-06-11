@@ -4,6 +4,7 @@ import { formatCurrency } from '../utils/format';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import ImageWithSkeleton from './ImageWithSkeleton';
 import { EASE } from '../motion';
+import { buildOptionNote, isDrinkItem } from '../utils/itemOptions';
 
 // Quantity readout that slides up on increment / down on decrement.
 function SlidingNumber({ value, direction }) {
@@ -99,33 +100,20 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
     }
   }, [isOpen, item]);
 
-  const isDrink = currentItem?.category === 'Minuman' || currentItem?.category === 'Signature';
+  const isDrink = isDrinkItem(currentItem);
   const finalPrice = currentItem?.price || 0;
   const totalPrice = finalPrice * quantity;
 
   const handleAdd = () => {
-    let optionsList = [];
-    if (isDrink) {
-      optionsList.push(temperature);
-      if (size === 'Large') optionsList.push('Large');
-      if (milk !== 'None') optionsList.push(`${milk} Milk`);
-      optionsList.push(`Sugar ${sugar}%`);
-    }
-    const optionsString = optionsList.join(', ');
-    
-    let finalNote = '';
-    if (optionsString && notes) finalNote = `${optionsString} | ${notes}`;
-    else if (optionsString) finalNote = optionsString;
-    else if (notes) finalNote = notes;
+    const options = { temperature, size, milk, sugar, notes };
+    const finalNote = buildOptionNote(currentItem, options);
 
     onAddToCart({
       ...currentItem,
       price: finalPrice,
       note: finalNote,
       quantity,
-      options: {
-        temperature, size, milk, sugar, notes
-      }
+      options,
     });
     if (navigator.vibrate) navigator.vibrate([20, 50, 20]); // Success haptic
     onClose();
