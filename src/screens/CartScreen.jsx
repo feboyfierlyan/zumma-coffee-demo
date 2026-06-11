@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Store, MapPin, ShoppingBag, ChevronRight, Plus, Minus, Ticket, Trash2, X } from 'lucide-react';
+import { ChevronLeft, Store, MapPin, ShoppingBag, ChevronRight, Plus, Minus, Ticket, Trash2, X, ArrowRight } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/format';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -8,8 +8,17 @@ import MenuItemModal from '../components/MenuItemModal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import Toast from '../components/Toast';
 import { EASE, DUR, SPRING, TAP } from '../motion';
+import { mockMenu } from '../data/mockData';
+import { defaultOptionsFor, buildOptionNote, computeItemPrice, requiresChoice } from '../utils/itemOptions';
 
 const TIP_OPTIONS = [0, 5000, 10000, 15000];
+
+// Curated picks surfaced on the empty cart so it becomes a discovery moment
+// instead of a dead-end. Resolved against the menu so prices/images stay in sync.
+const EMPTY_PICK_NAMES = ['Honeycomb Latte', 'Signature Matcha', 'Burnt Caramel Latte', 'Sea Salt Butterscotch'];
+const emptyPicks = EMPTY_PICK_NAMES
+  .map((name) => mockMenu.find((m) => m.name === name))
+  .filter(Boolean);
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -96,32 +105,145 @@ export default function CartScreen() {
 
   const handleCheckout = () => navigate('/payment');
 
+  // Quick-add a recommended pick straight from the empty cart. Items with a
+  // real choice (e.g. Hot vs Iced) open the detail sheet; everything else adds
+  // with priced defaults — mirroring the menu's quick-add for consistent lines.
+  const quickAdd = useCallback((item) => {
+    if (requiresChoice(item)) {
+      setSelectedItem(item);
+      return;
+    }
+    if (navigator.vibrate) navigator.vibrate(18);
+    const options = defaultOptionsFor(item);
+    const note = buildOptionNote(item, options);
+    const price = computeItemPrice(item, options);
+    addToCart({ ...item, price, note, options, quantity: 1 });
+  }, [addToCart]);
+
   if (cart.length === 0) {
     return (
       <motion.div
         initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: DUR.component, ease: EASE.swift }}
-        style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'var(--bg-main)', padding: '24px', position: 'relative', overflow: 'hidden' }}
+        style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}
       >
-        <motion.div
-          animate={{ scale: [1, 1.1, 1], opacity: [0.25, 0.4, 0.25] }}
-          transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
-          style={{ position: 'absolute', width: '220px', height: '220px', borderRadius: '50%', background: 'radial-gradient(circle, var(--accent-gold) 0%, transparent 70%)', filter: 'blur(50px)', zIndex: 0, top: '28%' }}
+        {/* Navigation header — matches the populated cart for a consistent frame */}
+        <header style={{ height: '60px', display: 'flex', alignItems: 'center', padding: '0 16px', flexShrink: 0 }}>
+          <motion.button aria-label="Kembali" whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px', display: 'flex' }}>
+            <ChevronLeft color="var(--text-primary)" size={24} />
+          </motion.button>
+          <div style={{ flex: 1, textAlign: 'center', position: 'absolute', left: 0, right: 0, pointerEvents: 'none' }}>
+            <span className="text-section-title">Keranjang</span>
+          </div>
+        </header>
+
+        {/* Hero — composed empty state */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 28px 24px', position: 'relative', overflow: 'hidden' }}>
+          {/* Soft, slowly-breathing brand orb */}
+          <motion.div
+            aria-hidden
+            animate={{ scale: [1, 1.12, 1], opacity: [0.18, 0.32, 0.18] }}
+            transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ position: 'absolute', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, var(--accent-gold) 0%, transparent 68%)', filter: 'blur(56px)', zIndex: 0 }}
+          />
+
+          {/* Layered ring + icon composition */}
+          <div style={{ position: 'relative', width: '212px', height: '212px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '34px' }}>
+            {/* Concentric guide rings */}
+            <motion.div
+              aria-hidden
+              initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...SPRING.soft, delay: 0.05 }}
+              style={{ position: 'absolute', width: '212px', height: '212px', borderRadius: '50%', border: '1px solid var(--border)' }}
+            />
+            <motion.div
+              aria-hidden
+              initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...SPRING.soft, delay: 0.12 }}
+              style={{ position: 'absolute', width: '160px', height: '160px', borderRadius: '50%', border: '1px solid var(--border)', background: 'radial-gradient(circle at 50% 35%, rgba(155,74,52,0.06), transparent 70%)' }}
+            />
+
+            {/* Floating accent specks (coffee beans) */}
+            <motion.span aria-hidden animate={{ y: [0, -9, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
+              style={{ position: 'absolute', top: '14px', right: '34px', width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'var(--accent-gold)', opacity: 0.5 }} />
+            <motion.span aria-hidden animate={{ y: [0, 8, 0] }} transition={{ duration: 3.8, repeat: Infinity, ease: 'easeInOut', delay: 0.4 }}
+              style={{ position: 'absolute', bottom: '26px', left: '28px', width: '7px', height: '7px', borderRadius: '50%', backgroundColor: 'var(--brand-deep)', opacity: 0.35 }} />
+            <motion.span aria-hidden animate={{ y: [0, -7, 0] }} transition={{ duration: 4.2, repeat: Infinity, ease: 'easeInOut', delay: 0.8 }}
+              style={{ position: 'absolute', bottom: '52px', right: '18px', width: '6px', height: '6px', borderRadius: '50%', backgroundColor: 'var(--accent-gold)', opacity: 0.4 }} />
+
+            {/* Central disc — pops in, then idly floats */}
+            <motion.div
+              initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...SPRING.pop, delay: 0.15 }}
+              style={{ zIndex: 1 }}
+            >
+              <motion.div
+                animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                style={{ width: '108px', height: '108px', borderRadius: '50%', background: 'linear-gradient(160deg, #FFFFFF 0%, var(--surface-2) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-float)' }}
+              >
+                <ShoppingBag size={40} color="var(--accent-gold)" strokeWidth={1.5} />
+              </motion.div>
+            </motion.div>
+          </div>
+
+          <motion.h2 initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.28, duration: DUR.component, ease: EASE.smoothOut }} className="text-display" style={{ fontSize: '26px', marginBottom: '10px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+            Keranjang Masih Kosong
+          </motion.h2>
+          <motion.p initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.36, duration: DUR.component, ease: EASE.smoothOut }} style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.6', textAlign: 'center', maxWidth: '260px', marginBottom: '28px', position: 'relative', zIndex: 1 }}>
+            Belum ada menu pilihanmu. Mulai dari rekomendasi di bawah, atau jelajahi seluruh menu kami.
+          </motion.p>
+          <motion.button whileTap={TAP} initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.44, duration: DUR.component, ease: EASE.smoothOut }} onClick={() => navigate(-1)} className="btn-primary" style={{ width: '100%', maxWidth: '320px', position: 'relative', zIndex: 1, height: '54px', fontSize: '15px' }}>
+            Jelajahi Menu
+            <ArrowRight size={18} strokeWidth={2.2} />
+          </motion.button>
+        </div>
+
+        {/* Recommendations — turn the dead-end into a discovery moment */}
+        {emptyPicks.length > 0 && (
+          <motion.section
+            initial={{ y: 24, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.52, duration: DUR.sheet, ease: EASE.smoothOut }}
+            style={{ flexShrink: 0, paddingBottom: 'calc(20px + env(safe-area-inset-bottom))' }}
+          >
+            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', padding: '0 16px 12px' }}>
+              <h3 className="text-section-title" style={{ fontSize: '16px', margin: 0 }}>Rekomendasi untukmu</h3>
+              <span style={{ fontSize: '12px', color: 'var(--text-tertiary)' }}>Geser →</span>
+            </div>
+            <div className="no-scrollbar snap-x" style={{ display: 'flex', gap: '12px', overflowX: 'auto', padding: '4px 16px 4px' }}>
+              {emptyPicks.map((item, i) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.56 + i * 0.05, duration: DUR.component, ease: EASE.smoothOut }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setSelectedItem(item)}
+                  className="will-animate"
+                  style={{ flex: '0 0 auto', width: '150px', borderRadius: 'var(--r-lg)', overflow: 'hidden', position: 'relative', cursor: 'pointer', boxShadow: 'var(--shadow-card)', backgroundColor: '#000' }}
+                >
+                  <div style={{ position: 'relative', width: '100%', aspectRatio: '1/1' }}>
+                    <ImageWithSkeleton src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} skeletonBorderRadius="0px" />
+                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0.08) 58%, transparent 100%)' }} />
+                  </div>
+                  <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, padding: '10px 12px' }}>
+                    <div style={{ color: '#FFF', fontSize: '13px', fontWeight: 700, lineHeight: 1.25, marginBottom: '5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.name}</div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--brand-cream)', fontSize: '12.5px', fontWeight: 600 }}>{formatCurrency(item.price)}</span>
+                      <motion.button
+                        aria-label={`Tambah ${item.name}`}
+                        whileTap={{ scale: 0.85 }}
+                        onClick={(e) => { e.stopPropagation(); quickAdd(item); }}
+                        style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: 'var(--brand-cream)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                      >
+                        <Plus size={17} color="var(--brand-deep)" />
+                      </motion.button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+        )}
+
+        <MenuItemModal
+          isOpen={!!selectedItem}
+          item={selectedItem}
+          onClose={() => setSelectedItem(null)}
+          onAddToCart={(updatedItem) => { addToCart(updatedItem); setSelectedItem(null); }}
         />
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...SPRING.pop, delay: 0.1 }}
-          style={{ width: '104px', height: '104px', borderRadius: '50%', backgroundColor: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: 'var(--shadow-card)', marginBottom: '32px', position: 'relative', zIndex: 1 }}
-        >
-          <ShoppingBag size={40} color="var(--accent-gold)" strokeWidth={1.5} />
-        </motion.div>
-        <motion.h2 initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="text-display" style={{ fontSize: '24px', marginBottom: '12px', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-          Keranjang Kosong
-        </motion.h2>
-        <motion.p initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', textAlign: 'center', maxWidth: '240px', marginBottom: '40px', position: 'relative', zIndex: 1 }}>
-          Sepertinya kamu belum memilih menu. Yuk, temukan kopi favoritmu hari ini!
-        </motion.p>
-        <motion.button whileTap={TAP} initial={{ y: 16, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} onClick={() => navigate(-1)} className="btn-primary" style={{ width: '100%', maxWidth: '300px', position: 'relative', zIndex: 1, height: '56px', fontSize: '15px' }}>
-          Jelajahi Menu
-        </motion.button>
       </motion.div>
     );
   }
