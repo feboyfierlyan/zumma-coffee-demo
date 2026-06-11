@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Clock, Copy } from 'lucide-react';
+import { ChevronLeft, Clock, Copy, RefreshCw, Building2, Store } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/format';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { EASE, DUR } from '../motion';
+import Toast from '../components/Toast';
+
+const INITIAL_TIME = 14 * 60 + 32; // 14:32
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -14,13 +17,12 @@ const pageVariants = {
 
 export default function PaymentScreen() {
   const navigate = useNavigate();
-  const { cartTotal, checkout } = useCart();
+  const { total, checkout } = useCart();
   const [activeTab, setActiveTab] = useState('QRIS');
-  const [timeLeft, setTimeLeft] = useState(14 * 60 + 32); // 14:32
+  const [timeLeft, setTimeLeft] = useState(INITIAL_TIME);
   const [showToast, setShowToast] = useState(false);
 
-  const tax = cartTotal * 0.1;
-  const total = cartTotal + tax;
+  const expired = timeLeft <= 0;
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -28,6 +30,8 @@ export default function PaymentScreen() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const regenerate = () => setTimeLeft(INITIAL_TIME);
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -37,6 +41,7 @@ export default function PaymentScreen() {
 
   // Simulate successful payment by tapping the QR code
   const handleSimulatePayment = () => {
+    if (expired) { regenerate(); return; }
     checkout();
     navigate('/success');
   };
@@ -46,9 +51,9 @@ export default function PaymentScreen() {
     navigate('/success');
   };
 
-  const handleCopy = () => {
+  const handleCopy = (value) => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText("0000000000000");
+      navigator.clipboard.writeText(value || "0000000000000");
     }
     setShowToast(true);
     if (navigator.vibrate) navigator.vibrate(10);
@@ -64,7 +69,7 @@ export default function PaymentScreen() {
       <header style={{
         height: '60px', display: 'flex', alignItems: 'center', padding: '0 16px', position: 'relative', flexShrink: 0
       }}>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px', display: 'flex' }}>
+        <motion.button aria-label="Kembali" whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px', display: 'flex' }}>
           <ChevronLeft color="var(--text-primary)" size={24} />
         </motion.button>
         <div style={{ flex: 1, textAlign: 'center', position: 'absolute', left: 0, right: 0, pointerEvents: 'none' }}>
@@ -72,22 +77,7 @@ export default function PaymentScreen() {
         </div>
       </header>
 
-      {/* Toast Notification */}
-      <AnimatePresence>
-        {showToast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20, x: '-50%' }} animate={{ opacity: 1, y: 0, x: '-50%' }} exit={{ opacity: 0, y: -20, x: '-50%' }}
-            style={{
-              position: 'fixed', top: '16px', left: '50%', zIndex: 100,
-              backgroundColor: 'var(--text-primary)', color: 'var(--bg-main)', padding: '12px 24px',
-              borderRadius: '24px', fontSize: '13px', fontWeight: '500',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-            }}
-          >
-            Kode berhasil disalin!
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <Toast show={showToast} message="Kode berhasil disalin!" />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflowY: 'auto' }} className="no-scrollbar">
         {/* Amount Hero */}
@@ -124,16 +114,24 @@ export default function PaymentScreen() {
             
             {/* QR Code Container */}
             <motion.div 
-              animate={{ boxShadow: ['0 4px 12px rgba(0,0,0,0.05)', '0 4px 20px rgba(155,74,52,0.15)', '0 4px 12px rgba(0,0,0,0.05)'] }}
+              animate={expired ? {} : { boxShadow: ['0 4px 12px rgba(0,0,0,0.05)', '0 4px 20px rgba(155,74,52,0.15)', '0 4px 12px rgba(0,0,0,0.05)'] }}
               transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
               onClick={handleSimulatePayment}
               style={{
                 width: '200px', height: '200px', backgroundColor: '#FFFFFF',
                 borderRadius: '12px', display: 'flex', flexDirection: 'column',
                 alignItems: 'center', justifyContent: 'center', padding: '16px',
-                cursor: 'pointer'
+                cursor: 'pointer', position: 'relative', overflow: 'hidden'
               }}
             >
+              {expired && (
+                <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(2px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px', zIndex: 2, padding: '16px', textAlign: 'center' }}>
+                  <span style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>Kode QRIS kedaluwarsa</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: 'var(--accent-gold)' }}>
+                    <RefreshCw size={14} /> Ketuk untuk perbarui
+                  </span>
+                </div>
+              )}
               <svg width="130" height="130" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect width="100" height="100" fill="white"/>
                 <path d="M10 10H30V30H10V10ZM15 15V25H25V15H15Z" fill="black"/>
@@ -152,17 +150,61 @@ export default function PaymentScreen() {
               </svg>
             </motion.div>
 
-            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-gold)', fontSize: '13px' }}>
+            <div style={{ marginTop: '24px', display: 'flex', alignItems: 'center', gap: '6px', color: expired ? '#C0392B' : 'var(--accent-gold)', fontSize: '13px', fontWeight: expired ? 600 : 400 }}>
               <Clock size={14} />
-              <span>Berlaku selama {formatTime(timeLeft)}</span>
+              <span>{expired ? 'Kode kedaluwarsa' : `Berlaku selama ${formatTime(timeLeft)}`}</span>
             </div>
 
             <motion.button 
               whileTap={{ scale: 0.95 }}
-              onClick={handleCopy}
+              onClick={expired ? regenerate : () => handleCopy('00020101021126...QRIS')}
               className="btn-secondary" style={{ marginTop: '24px', width: 'auto', padding: '0 24px', height: '44px', fontSize: '13px', gap: '8px' }}>
-              <Copy size={16} /> Salin Kode QRIS
+              {expired ? <><RefreshCw size={16} /> Perbarui Kode QRIS</> : <><Copy size={16} /> Salin Kode QRIS</>}
             </motion.button>
+          </div>
+        )}
+
+        {/* Transfer Bank Panel */}
+        {activeTab === 'Transfer Bank' && (
+          <div style={{ marginTop: '24px', padding: '0 16px', flex: 1 }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '20px', boxShadow: '0 4px 12px rgba(0,0,0,0.04)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+                <Building2 size={20} color="var(--accent-gold)" />
+                <span style={{ fontSize: '15px', fontWeight: 700 }}>Bank Central Asia (BCA)</span>
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '4px' }}>Nomor Virtual Account</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                <span style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '0.5px' }}>8808 0812 3456 7890</span>
+                <motion.button whileTap={{ scale: 0.9 }} aria-label="Salin nomor VA" onClick={() => handleCopy('8808081234567890')} style={{ background: 'var(--surface-2)', border: 'none', borderRadius: '10px', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <Copy size={18} color="var(--accent-gold)" />
+                </motion.button>
+              </div>
+              <div style={{ height: '1px', backgroundColor: 'var(--border)', margin: '16px 0' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                <span style={{ color: 'var(--text-secondary)' }}>Jumlah Transfer</span>
+                <span style={{ fontWeight: 700 }}>{formatCurrency(total)}</span>
+              </div>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px', lineHeight: 1.5, textAlign: 'center' }}>
+              Transfer sesuai jumlah di atas, lalu tekan <b>Saya Sudah Bayar</b>. Pembayaran terverifikasi otomatis.
+            </p>
+          </div>
+        )}
+
+        {/* Cashier Panel */}
+        {activeTab === 'Bayar di Kasir' && (
+          <div style={{ marginTop: '24px', padding: '0 16px', flex: 1 }}>
+            <div style={{ backgroundColor: '#FFFFFF', borderRadius: '16px', padding: '24px 20px', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', textAlign: 'center' }}>
+              <Store size={28} color="var(--accent-gold)" style={{ marginBottom: '12px' }} />
+              <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '6px' }}>Tunjukkan kode ini ke kasir</div>
+              <div className="text-display" style={{ fontSize: '34px', letterSpacing: '2px', marginBottom: '12px' }}>ZUM-0739</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', backgroundColor: 'var(--surface-2)', padding: '8px 16px', borderRadius: '12px' }}>
+                Total {formatCurrency(total)}
+              </div>
+            </div>
+            <p style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '16px', lineHeight: 1.5, textAlign: 'center' }}>
+              Bayar tunai / kartu di kasir, lalu tekan <b>Saya Sudah Bayar</b> untuk menyelesaikan pesanan.
+            </p>
           </div>
         )}
       </div>
@@ -180,7 +222,7 @@ export default function PaymentScreen() {
           onClick={handleConfirm}
           className="btn-primary"
         >
-          Konfirmasi Pembayaran
+          {activeTab === 'QRIS' ? 'Konfirmasi Pembayaran' : 'Saya Sudah Bayar'}
         </motion.button>
       </motion.div>
     </motion.div>

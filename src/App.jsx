@@ -9,6 +9,7 @@ import MenuScreen from './screens/MenuScreen';
 import CartScreen from './screens/CartScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import SuccessScreen from './screens/SuccessScreen';
+import OrderStatusScreen from './screens/OrderStatusScreen';
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -29,6 +30,7 @@ function AnimatedRoutes() {
         <Route path="/cart" element={<CartScreen />} />
         <Route path="/payment" element={<PaymentScreen />} />
         <Route path="/success" element={<SuccessScreen />} />
+        <Route path="/status" element={<OrderStatusScreen />} />
       </Routes>
     </AnimatePresence>
   );

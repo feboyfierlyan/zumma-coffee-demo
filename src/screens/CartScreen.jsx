@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Store, MapPin, ShoppingBag, ChevronRight, Plus, Minus } from 'lucide-react';
+import { ChevronLeft, Store, MapPin, ShoppingBag, ChevronRight, Plus, Minus, Ticket, Trash2, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/format';
 import { motion, AnimatePresence } from 'framer-motion';
 import MenuItemModal from '../components/MenuItemModal';
 import ImageWithSkeleton from '../components/ImageWithSkeleton';
+import Toast from '../components/Toast';
 import { EASE, DUR, SPRING, TAP } from '../motion';
+
+const TIP_OPTIONS = [0, 5000, 10000, 15000];
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -40,7 +43,17 @@ export default function CartScreen() {
     cart,
     addToCart,
     updateQuantity,
+    removeFromCart,
     cartTotal,
+    discount,
+    tax,
+    tip,
+    setTip,
+    total,
+    taxRate,
+    appliedVoucher,
+    applyVoucher,
+    clearVoucher,
     orderNote,
     setOrderNote,
     deliveryOption,
@@ -49,13 +62,36 @@ export default function CartScreen() {
 
   const [selectedItem, setSelectedItem] = useState(null);
   const [dirMap, setDirMap] = useState({});
-
-  const tax = cartTotal * 0.1;
-  const total = cartTotal + tax;
+  const [voucherInput, setVoucherInput] = useState('');
+  const [voucherError, setVoucherError] = useState('');
+  const [undo, setUndo] = useState(null);
+  const undoTimer = useRef(null);
 
   const step = (cartItemId, delta) => {
     setDirMap((prev) => ({ ...prev, [cartItemId]: delta }));
     updateQuantity(cartItemId, delta);
+  };
+
+  const handleApplyVoucher = () => {
+    if (applyVoucher(voucherInput)) {
+      setVoucherError('');
+      setVoucherInput('');
+    } else {
+      setVoucherError('Kode voucher tidak valid');
+    }
+  };
+
+  // Swipe-to-delete with a 5s undo window (item is re-added if undone).
+  const handleSwipeDelete = (item) => {
+    removeFromCart(item.cartItemId);
+    setUndo(item);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
+    undoTimer.current = setTimeout(() => setUndo(null), 5000);
+  };
+  const handleUndo = () => {
+    if (undo) addToCart({ ...undo, cartItemId: undefined });
+    setUndo(null);
+    if (undoTimer.current) clearTimeout(undoTimer.current);
   };
 
   const handleCheckout = () => navigate('/payment');
@@ -94,7 +130,7 @@ export default function CartScreen() {
     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: DUR.component, ease: EASE.swift }} style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--bg-main)' }}>
       {/* Navigation Header */}
       <header style={{ height: '60px', display: 'flex', alignItems: 'center', padding: '0 16px', position: 'sticky', top: 0, zIndex: 20, backgroundColor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', borderBottom: '1px solid var(--border)' }}>
-        <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px', display: 'flex' }}>
+        <motion.button aria-label="Kembali" whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px', display: 'flex' }}>
           <ChevronLeft color="var(--text-primary)" size={24} />
         </motion.button>
         <div style={{ flex: 1, textAlign: 'center', position: 'absolute', left: 0, right: 0, pointerEvents: 'none' }}>
@@ -116,10 +152,21 @@ export default function CartScreen() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, transition: { duration: 0.2 } }}
                 transition={{ duration: DUR.component, ease: EASE.smoothOut }}
+                style={{ position: 'relative', borderRadius: 'var(--r-md)', overflow: 'hidden' }}
+              >
+                {/* Reveal-on-swipe delete affordance */}
+                <div style={{ position: 'absolute', inset: 0, backgroundColor: '#C0392B', borderRadius: 'var(--r-md)', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: '22px', color: '#FFF', gap: '8px' }}>
+                  <Trash2 size={18} /> <span style={{ fontSize: '13px', fontWeight: 600 }}>Hapus</span>
+                </div>
+              <motion.div
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={{ left: 0.7, right: 0 }}
+                onDragEnd={(e, info) => { if (info.offset.x < -100) handleSwipeDelete(item); }}
                 whileTap={{ scale: 0.99 }}
                 onClick={() => setSelectedItem(item)}
                 className="will-animate"
-                style={{ display: 'flex', padding: '12px', borderRadius: 'var(--r-md)', backgroundColor: 'var(--surface-1)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-soft)', gap: '12px', cursor: 'pointer' }}
+                style={{ display: 'flex', padding: '12px', borderRadius: 'var(--r-md)', backgroundColor: 'var(--surface-1)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-soft)', gap: '12px', cursor: 'pointer', position: 'relative', touchAction: 'pan-y' }}
               >
                 {item.image ? (
                   <ImageWithSkeleton src={item.image} alt={item.name} style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', flexShrink: 0 }} skeletonBorderRadius="12px" />
@@ -151,9 +198,11 @@ export default function CartScreen() {
                   </div>
                 </div>
               </motion.div>
+              </motion.div>
             ))}
           </AnimatePresence>
         </div>
+        <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '8px', textAlign: 'center', opacity: 0.7 }}>Geser kartu ke kiri untuk menghapus</div>
       </div>
 
       {/* Notes Field */}
@@ -188,16 +237,83 @@ export default function CartScreen() {
         </div>
       </div>
 
+      {/* Voucher */}
+      <div style={{ padding: '24px 16px 0' }}>
+        <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>Voucher</div>
+        {appliedVoucher ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', borderRadius: 'var(--r-md)', backgroundColor: 'rgba(155,74,52,0.06)', border: '1px solid var(--accent-gold)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: 600, color: 'var(--accent-gold)' }}>
+              <Ticket size={16} /> {appliedVoucher.code} — {appliedVoucher.label}
+            </span>
+            <button aria-label="Hapus voucher" onClick={clearVoucher} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '4px' }}>
+              <X size={16} color="var(--text-secondary)" />
+            </button>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '8px', backgroundColor: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: 'var(--r-sm)', padding: '0 12px' }}>
+                <Ticket size={16} color="var(--text-secondary)" />
+                <input
+                  value={voucherInput}
+                  onChange={(e) => { setVoucherInput(e.target.value); setVoucherError(''); }}
+                  placeholder="Masukkan kode (ZUMMA10)"
+                  aria-label="Kode voucher"
+                  style={{ flex: 1, background: 'transparent', border: 'none', outline: 'none', height: '46px', fontFamily: 'DM Sans', fontSize: '14px', color: 'var(--text-primary)' }}
+                />
+              </div>
+              <motion.button whileTap={{ scale: 0.96 }} onClick={handleApplyVoucher} style={{ height: '46px', padding: '0 18px', borderRadius: 'var(--r-sm)', border: 'none', backgroundColor: 'var(--text-primary)', color: '#FFF', fontWeight: 600, fontSize: '14px', cursor: 'pointer' }}>
+                Pakai
+              </motion.button>
+            </div>
+            {voucherError && <div style={{ fontSize: '12px', color: '#C0392B', marginTop: '6px' }}>{voucherError}</div>}
+          </>
+        )}
+      </div>
+
+      {/* Tip */}
+      <div style={{ padding: '24px 16px 0' }}>
+        <div style={{ fontSize: '14px', fontWeight: 600, marginBottom: '12px' }}>Beri Tip untuk Barista</div>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          {TIP_OPTIONS.map((amt) => {
+            const active = tip === amt;
+            return (
+              <motion.button
+                key={amt}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setTip(amt)}
+                aria-pressed={active}
+                style={{ flex: 1, height: '44px', borderRadius: 'var(--r-sm)', cursor: 'pointer', fontSize: '13px', fontWeight: 600, border: active ? '1.5px solid var(--accent-gold)' : '1px solid var(--border)', backgroundColor: active ? 'rgba(155,74,52,0.06)' : 'var(--surface-1)', color: active ? 'var(--accent-gold)' : 'var(--text-secondary)' }}
+              >
+                {amt === 0 ? 'Tanpa' : formatCurrency(amt)}
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Order Breakdown */}
-      <div style={{ padding: '24px 16px 24px', flex: 1 }}>
+      <div style={{ padding: '24px 16px 24px', flex: 1 }} aria-live="polite">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
           <span>Subtotal</span>
           <span>{formatCurrency(cartTotal)}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-          <span>Pajak (10%)</span>
+        {discount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--accent-gold)', fontWeight: 600 }}>
+            <span>Diskon{appliedVoucher ? ` (${appliedVoucher.code})` : ''}</span>
+            <span>− {formatCurrency(discount)}</span>
+          </div>
+        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+          <span>Pajak ({Math.round(taxRate * 100)}%)</span>
           <span>{formatCurrency(tax)}</span>
         </div>
+        {tip > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            <span>Tip Barista</span>
+            <span>{formatCurrency(tip)}</span>
+          </div>
+        )}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>Total</span>
           <motion.span key={total} initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={SPRING.pop} style={{ fontSize: '18px', fontWeight: 700 }}>{formatCurrency(total)}</motion.span>
@@ -215,6 +331,8 @@ export default function CartScreen() {
           Bayar Sekarang &bull; {formatCurrency(total)}
         </motion.button>
       </motion.div>
+
+      <Toast show={!!undo} message="Item dihapus" actionLabel="Urungkan" onAction={handleUndo} />
 
       <MenuItemModal
         isOpen={!!selectedItem}

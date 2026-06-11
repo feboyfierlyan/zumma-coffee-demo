@@ -145,6 +145,7 @@ export const mockMenu = [
     price: 18000,
     category: 'Minuman',
     subcategory: 'Tea & Refreshers',
+    temps: ['Hot'],
     image: '/hot-tea.webp'
   },
   {
