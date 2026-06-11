@@ -74,6 +74,7 @@ export default function MenuScreen() {
 
   // Item-fly add-to-cart machinery
   const cartIconRef = useRef(null);
+  const cartBarRef = useRef(null);
   const cartControls = useAnimationControls();
   const [flyers, setFlyers] = useState([]);
   const flyId = useRef(0);
@@ -130,14 +131,18 @@ export default function MenuScreen() {
 
   const handleItemClick = (item) => setSelectedItem(item);
 
-  // Clone the tapped thumbnail and fly it into the cart icon, then add to cart.
+  // Clone the tapped thumbnail and let it glide into the bottom cart bar, then add to cart.
   const quickAdd = useCallback((item, originEl) => {
-    const target = cartIconRef.current;
-    if (target && originEl) {
+    if (originEl) {
       const from = originEl.getBoundingClientRect();
-      const to = target.getBoundingClientRect();
-      const dx = (to.left + to.width / 2) - (from.left + from.width / 2);
-      const dy = (to.top + to.height / 2) - (from.top + from.height / 2);
+      const bar = cartBarRef.current;
+      // Land in the bottom cart bar; fall back to bottom-center before the bar mounts.
+      const toX = bar ? bar.getBoundingClientRect().left + 44 : window.innerWidth / 2;
+      const toY = bar
+        ? bar.getBoundingClientRect().top + bar.getBoundingClientRect().height / 2
+        : window.innerHeight - 56;
+      const dx = toX - (from.left + from.width / 2);
+      const dy = toY - (from.top + from.height / 2);
       const id = ++flyId.current;
       setFlyers((prev) => [...prev, {
         id,
@@ -146,7 +151,7 @@ export default function MenuScreen() {
         dx,
         dy,
       }]);
-      setTimeout(() => setFlyers((prev) => prev.filter((f) => f.id !== id)), 560);
+      setTimeout(() => setFlyers((prev) => prev.filter((f) => f.id !== id)), 1200);
     }
     if (navigator.vibrate) navigator.vibrate(18);
     addToCart({ ...item, quantity: 1 });
@@ -563,6 +568,7 @@ export default function MenuScreen() {
         {cartCount > 0 && !isExiting && showCartBar && (
           <div style={{ position: 'fixed', bottom: 'calc(10px + env(safe-area-inset-bottom))', left: 0, right: 0, zIndex: 50, display: 'flex', justifyContent: 'center', padding: '0 16px', pointerEvents: 'none' }}>
             <motion.div
+              ref={cartBarRef}
               initial={{ y: 130, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 130, opacity: 0 }}
@@ -600,13 +606,26 @@ export default function MenuScreen() {
             key={f.id}
             src={f.src}
             alt=""
-            initial={{ x: 0, y: 0, scale: 1, opacity: 1 }}
-            animate={{ x: f.dx, y: f.dy, scale: 0.2, opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE.smoothOut }}
+            initial={{ x: 0, y: 0, scale: 1, opacity: 1, rotate: 0 }}
+            animate={{
+              // Phase 1 (0 → 32%): shrink in place. Phase 2 (32% → 100%): glide into the bottom bar.
+              x: [0, 0, f.dx],
+              y: [0, -14, f.dy],
+              scale: [1, 0.5, 0.2],
+              rotate: [0, -2, -7],
+              opacity: [1, 1, 0],
+            }}
+            transition={{
+              duration: 1.05,
+              ease: [0.42, 0, 0.18, 1],
+              times: [0, 0.32, 1],
+              opacity: { duration: 1.05, times: [0, 0.85, 1], ease: 'easeIn' },
+            }}
             className="will-animate"
             style={{
               position: 'fixed', top: f.from.top, left: f.from.left, width: f.from.width, height: f.from.height,
-              borderRadius: '14px', objectFit: 'cover', boxShadow: '0 12px 24px rgba(0,0,0,0.25)',
+              borderRadius: '18px', objectFit: 'cover', transformOrigin: 'center center',
+              boxShadow: '0 20px 40px rgba(0,0,0,0.28)',
             }}
           />
         ))}
