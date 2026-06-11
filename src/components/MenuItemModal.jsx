@@ -41,48 +41,52 @@ const colors = {
   primarySolid: '#1A1A1A' // Black for primary actions
 };
 
-// Illustrated option card: the brand line-art illustration leads as the focal
-// point, framed in a soft "well" that tints terracotta when active; the label
-// sits beneath as support. Used for the temperature / size / milk selectors.
-const IllustratedOption = ({ icon: Icon, iconProps, label, extra, selected, onClick, iconSize = 50, wrapSize = 76, wellRadius = 22 }) => (
+// Seamless Option Group: wraps segmented options
+const OptionGroupContainer = ({ children }) => (
+  <div style={{
+    display: 'flex',
+    border: `1px solid ${colors.border}`,
+    borderRadius: '16px',
+    padding: '8px',
+    backgroundColor: '#FFFFFF',
+    gap: '4px'
+  }}>
+    {children}
+  </div>
+);
+
+// Segmented Option: sleek variant without bounding boxes
+const SegmentedOption = ({ icon: Icon, iconProps, label, extra, selected, onClick, iconSize = 50 }) => (
   <motion.button
     type="button"
     onClick={onClick}
-    whileTap={{ scale: 0.96 }}
+    whileTap={{ scale: 0.94 }}
     style={{
       flex: '1 1 0',
       minWidth: 0,
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '10px',
-      padding: '16px 8px 14px',
-      borderRadius: '20px',
-      border: selected ? `1.5px solid ${colors.selectedBorder}` : `1px solid ${colors.border}`,
-      backgroundColor: selected ? colors.selectedBg : '#FFFFFF',
+      gap: '8px',
+      padding: '12px 4px',
+      background: 'transparent',
+      border: 'none',
       cursor: 'pointer',
-      transition: 'border-color 0.2s ease, background-color 0.2s ease',
       WebkitTapHighlightColor: 'transparent'
     }}
   >
-    <motion.div
-      animate={{ scale: selected ? 1.04 : 1 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 20 }}
-      style={{
-        width: wrapSize,
-        height: wrapSize,
-        borderRadius: wellRadius,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: selected ? 'rgba(155,74,52,0.10)' : '#F6F4F2',
-        transition: 'background-color 0.2s ease'
-      }}
-    >
+    <div style={{
+      height: '68px', // Fixed height to align icons bottom
+      display: 'flex',
+      alignItems: 'flex-end',
+      justifyContent: 'center'
+    }}>
       <Icon color={selected ? '#9B4A34' : '#B7B2AD'} size={iconSize} {...iconProps} />
-    </motion.div>
-    <span style={{ fontSize: '14px', fontWeight: selected ? 600 : 500, color: colors.textPrimary, lineHeight: 1.1 }}>{label}</span>
-    {extra && <span style={{ fontSize: '11px', color: colors.textSecondary, lineHeight: 1 }}>{extra}</span>}
+    </div>
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+      <span style={{ fontSize: '14px', fontWeight: selected ? 600 : 500, color: selected ? '#9B4A34' : colors.textSecondary, lineHeight: 1.1 }}>{label}</span>
+      {extra && <span style={{ fontSize: '11px', color: colors.textSecondary, lineHeight: 1 }}>{extra}</span>}
+    </div>
   </motion.button>
 );
 
@@ -278,32 +282,32 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
             {config.temps.length > 1 && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>TEMPERATURE</div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <OptionGroupContainer>
                   {config.temps.map((t) => (
-                    <IllustratedOption key={t} icon={TEMP_ICONS[t]} label={t} selected={temperature === t} onClick={() => setTemperature(t)} />
+                    <SegmentedOption key={t} icon={TEMP_ICONS[t]} label={t} selected={temperature === t} onClick={() => setTemperature(t)} />
                   ))}
-                </div>
+                </OptionGroupContainer>
               </div>
             )}
 
             {config.sizes && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>SIZE</div>
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <IllustratedOption icon={CupSizeIcon} label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
-                  <IllustratedOption icon={CupSizeIcon} iconProps={{ large: true }} label="Large" extra={fmtDelta(SIZE_DELTAS.Large)} selected={size === 'Large'} onClick={() => setSize('Large')} />
-                </div>
+                <OptionGroupContainer>
+                  <SegmentedOption icon={CupSizeIcon} label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
+                  <SegmentedOption icon={CupSizeIcon} iconProps={{ large: true }} label="Large" extra={fmtDelta(SIZE_DELTAS.Large)} selected={size === 'Large'} onClick={() => setSize('Large')} />
+                </OptionGroupContainer>
               </div>
             )}
 
             {config.milks && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>MILK</div>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <OptionGroupContainer>
                   {['Whole', 'Oat', 'Almond', 'None'].map(m => (
-                    <IllustratedOption key={m} icon={MILK_ICONS[m]} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} iconSize={36} wrapSize={56} wellRadius={16} />
+                    <SegmentedOption key={m} icon={MILK_ICONS[m]} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} iconSize={40} />
                   ))}
-                </div>
+                </OptionGroupContainer>
               </div>
             )}
 
