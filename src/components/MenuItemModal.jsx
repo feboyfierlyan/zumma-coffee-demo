@@ -41,9 +41,10 @@ const colors = {
   primarySolid: '#1A1A1A' // Black for primary actions
 };
 
-// Illustrated option card: brand line-art icon above the label, used for the
-// temperature / size / milk selectors so each choice reads at a glance.
-const IllustratedOption = ({ icon: Icon, iconProps, label, extra, selected, onClick }) => (
+// Illustrated option card: the brand line-art illustration leads as the focal
+// point, framed in a soft "well" that tints terracotta when active; the label
+// sits beneath as support. Used for the temperature / size / milk selectors.
+const IllustratedOption = ({ icon: Icon, iconProps, label, extra, selected, onClick, iconSize = 50, wrapSize = 76, wellRadius = 22 }) => (
   <motion.button
     type="button"
     onClick={onClick}
@@ -54,9 +55,9 @@ const IllustratedOption = ({ icon: Icon, iconProps, label, extra, selected, onCl
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      gap: '7px',
-      padding: '12px 8px 10px',
-      borderRadius: '16px',
+      gap: '10px',
+      padding: '16px 8px 14px',
+      borderRadius: '20px',
       border: selected ? `1.5px solid ${colors.selectedBorder}` : `1px solid ${colors.border}`,
       backgroundColor: selected ? colors.selectedBg : '#FFFFFF',
       cursor: 'pointer',
@@ -64,8 +65,23 @@ const IllustratedOption = ({ icon: Icon, iconProps, label, extra, selected, onCl
       WebkitTapHighlightColor: 'transparent'
     }}
   >
-    <Icon color={selected ? '#9B4A34' : '#C4C0BC'} {...iconProps} />
-    <span style={{ fontSize: '13px', fontWeight: selected ? 600 : 500, color: colors.textPrimary, lineHeight: 1 }}>{label}</span>
+    <motion.div
+      animate={{ scale: selected ? 1.04 : 1 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+      style={{
+        width: wrapSize,
+        height: wrapSize,
+        borderRadius: wellRadius,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: selected ? 'rgba(155,74,52,0.10)' : '#F6F4F2',
+        transition: 'background-color 0.2s ease'
+      }}
+    >
+      <Icon color={selected ? '#9B4A34' : '#B7B2AD'} size={iconSize} {...iconProps} />
+    </motion.div>
+    <span style={{ fontSize: '14px', fontWeight: selected ? 600 : 500, color: colors.textPrimary, lineHeight: 1.1 }}>{label}</span>
     {extra && <span style={{ fontSize: '11px', color: colors.textSecondary, lineHeight: 1 }}>{extra}</span>}
   </motion.button>
 );
@@ -283,9 +299,9 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
             {config.milks && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>MILK</div>
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
                   {['Whole', 'Oat', 'Almond', 'None'].map(m => (
-                    <IllustratedOption key={m} icon={MILK_ICONS[m]} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} />
+                    <IllustratedOption key={m} icon={MILK_ICONS[m]} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} iconSize={36} wrapSize={56} wellRadius={16} />
                   ))}
                 </div>
               </div>
