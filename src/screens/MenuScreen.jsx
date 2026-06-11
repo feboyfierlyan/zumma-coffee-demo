@@ -10,6 +10,7 @@ import ImageWithSkeleton from '../components/ImageWithSkeleton';
 import Skeleton from '../components/Skeleton';
 import { motion, useScroll, useTransform, AnimatePresence, useAnimationControls } from 'framer-motion';
 import { EASE, DUR, SPRING, TAP } from '../motion';
+import { ORDER_STEPS } from '../config/order';
 
 const pageVariants = {
   initial: { opacity: 0, y: 8 },
@@ -64,11 +65,11 @@ const CategoryBanner = ({ category }) => {
 
 export default function MenuScreen() {
   const navigate = useNavigate();
-  const { cartCount, cartTotal, addToCart, cart, activeOrder } = useCart();
-  // Continuous menu + scroll-spy: every category renders as one long list and
-  // the sticky pills highlight whichever section is currently in view.
+  const { cartCount, cartTotal, addToCart, cart, activeOrder, orderStep } = useCart();
+  // The sticky pills highlight the selected category.
   const realCategories = useMemo(() => mockCategories.filter((c) => c !== 'All'), []);
-  const [activeSection, setActiveSection] = useState(() => realCategories[0]);
+  const [activeCategory, setActiveCategory] = useState(() => realCategories[0]);
+  const [activeSubcategory, setActiveSubcategory] = useState('All');
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
@@ -84,8 +85,6 @@ export default function MenuScreen() {
   // Category pill center-scroll
   const pillStripRef = useRef(null);
   const pillRefs = useRef({});
-  const sectionRefs = useRef({});
-  const isProgrammaticScroll = useRef(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setShowCartBar(true), 350);
@@ -95,46 +94,14 @@ export default function MenuScreen() {
   // Keep the active pill centered in the strip as the section changes.
   useEffect(() => {
     const strip = pillStripRef.current;
-    const el = pillRefs.current[activeSection];
+    const el = pillRefs.current[activeCategory];
     if (strip && el) {
       strip.scrollTo({
         left: el.offsetLeft - strip.clientWidth / 2 + el.clientWidth / 2,
         behavior: 'smooth',
       });
     }
-  }, [activeSection]);
-
-  // Scroll-spy: highlight the section whose heading is just under the sticky
-  // header + pills. Suppressed briefly during a pill tap so the tapped pill wins.
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (isProgrammaticScroll.current) return;
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-        if (visible[0]) {
-          const cat = visible[0].target.getAttribute('data-section');
-          if (cat) setActiveSection(cat);
-        }
-      },
-      { rootMargin: '-128px 0px -55% 0px', threshold: 0 }
-    );
-    realCategories.forEach((cat) => {
-      const el = sectionRefs.current[cat];
-      if (el) observer.observe(el);
-    });
-    return () => observer.disconnect();
-  }, [realCategories]);
-
-  const scrollToSection = useCallback((cat) => {
-    const el = sectionRefs.current[cat];
-    if (!el) return;
-    setActiveSection(cat);
-    isProgrammaticScroll.current = true;
-    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    setTimeout(() => { isProgrammaticScroll.current = false; }, 700);
-  }, []);
+  }, [activeCategory]);
 
   const handleNavigateToCart = () => {
     setIsExiting(true);
@@ -162,7 +129,7 @@ export default function MenuScreen() {
       })
     : [];
 
-  const categoriesToRender = realCategories;
+  const categoriesToRender = [activeCategory];
 
   const handleItemClick = (item) => setSelectedItem(item);
 
@@ -426,16 +393,16 @@ export default function MenuScreen() {
         )}
       </AnimatePresence>
 
-      {/* Category section nav (sticky scroll-spy) */}
+      {/* Category nav (sticky) */}
       <div style={{ position: 'sticky', top: '64px', zIndex: 45, backgroundColor: '#FFFFFF', boxShadow: '0 6px 12px -8px rgba(0,0,0,0.08)' }}>
         <div ref={pillStripRef} className="no-scrollbar" style={{ display: 'flex', overflowX: 'auto', padding: '12px 16px', gap: '10px' }}>
           {realCategories.map((cat) => {
-            const active = activeSection === cat;
+            const active = activeCategory === cat;
             return (
               <button
                 key={cat}
                 ref={(el) => { pillRefs.current[cat] = el; }}
-                onClick={() => scrollToSection(cat)}
+                onClick={() => { setActiveCategory(cat); setActiveSubcategory('All'); }}
                 aria-current={active ? 'true' : undefined}
                 style={{
                   position: 'relative', height: '38px', padding: '0 20px', borderRadius: '24px',
@@ -457,21 +424,51 @@ export default function MenuScreen() {
             );
           })}
         </div>
+
+        {/* Subcategory pills */}
+        <AnimatePresence>
+          {activeCategory && (
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} style={{ overflow: 'hidden' }}>
+              <div className="no-scrollbar" style={{ display: 'flex', overflowX: 'auto', padding: '0 16px 12px 16px', gap: '8px' }}>
+                {['All', ...new Set(mockMenu.filter((item) => item.category === activeCategory).map((item) => item.subcategory).filter(Boolean))].map((subcat) => {
+                  const active = activeSubcategory === subcat;
+                  return (
+                    <button
+                      key={subcat}
+                      onClick={() => { setActiveSubcategory(subcat); }}
+                      style={{
+                        position: 'relative', height: '32px', padding: '0 16px', borderRadius: '16px',
+                        border: active ? '1px solid transparent' : '1px solid var(--border)',
+                        backgroundColor: 'transparent', color: active ? '#FFFFFF' : 'var(--text-secondary)',
+                        fontSize: '12px', fontWeight: 600, whiteSpace: 'nowrap', cursor: 'pointer',
+                        WebkitTapHighlightColor: 'transparent', flex: '0 0 auto',
+                      }}
+                    >
+                      {active && (
+                        <motion.span layoutId="activeSubPill" transition={{ duration: 0.2, ease: EASE.swift }} style={{ position: 'absolute', inset: 0, borderRadius: '16px', backgroundColor: 'var(--accent-gold)', zIndex: 0 }} />
+                      )}
+                      <span style={{ position: 'relative', zIndex: 1 }}>{subcat}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Menu sections */}
       <div style={{ padding: '0 16px', paddingBottom: 'calc(140px + env(safe-area-inset-bottom))' }}>
         {categoriesToRender.map((category) => {
-          const categoryItems = mockMenu.filter((item) => item.category === category);
+          const categoryItems = mockMenu.filter((item) => {
+            if (item.category !== category) return false;
+            if (activeSubcategory !== 'All' && item.subcategory !== activeSubcategory) return false;
+            return true;
+          });
           if (categoryItems.length === 0) return null;
 
           return (
-            <div
-              key={category}
-              data-section={category}
-              ref={(el) => { sectionRefs.current[category] = el; }}
-              style={{ marginBottom: '32px', scrollMarginTop: '116px' }}
-            >
+            <div key={category} style={{ marginBottom: '32px' }}>
               {category === 'Makanan' || category === 'Minuman' ? (
                 <CategoryBanner category={category} />
               ) : (
@@ -571,13 +568,17 @@ export default function MenuScreen() {
               className="will-animate"
               style={{
                 width: '100%', maxWidth: 'calc(var(--app-max) - 32px)', borderRadius: 'var(--r-lg)',
-                backgroundColor: 'var(--accent-gold)', color: '#FFFFFF', boxShadow: '0 12px 24px rgba(155, 74, 52, 0.3)',
+                backgroundColor: (orderStep >= ORDER_STEPS.length - 1) ? '#1F9D55' : 'var(--accent-gold)', 
+                color: '#FFFFFF', 
+                boxShadow: (orderStep >= ORDER_STEPS.length - 1) ? '0 12px 24px rgba(31, 157, 85, 0.3)' : '0 12px 24px rgba(155, 74, 52, 0.3)',
                 padding: '12px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', pointerEvents: 'auto',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                 <motion.div animate={{ scale: [1, 1.5, 1], opacity: [1, 0.4, 1] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }} style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#FFFFFF' }} />
-                <div style={{ fontSize: '13px', fontWeight: 600 }}>Pesanan #{activeOrder.orderId} diproses</div>
+                <div style={{ fontSize: '13px', fontWeight: 600 }}>
+                  Pesanan #{activeOrder.orderId} • {ORDER_STEPS[orderStep]?.label || 'Diproses'}
+                </div>
               </div>
               <div style={{ fontSize: '13px', fontWeight: 600 }}>Lihat &rarr;</div>
             </motion.div>
