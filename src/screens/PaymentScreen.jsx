@@ -1,14 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, Clock, Copy, Wallet } from 'lucide-react';
+import { ChevronLeft, Clock, Copy } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { formatCurrency } from '../utils/format';
 import { motion, AnimatePresence } from 'framer-motion';
+import { EASE, DUR } from '../motion';
 
 const pageVariants = {
-  initial: { opacity: 0, x: 20 },
-  in: { opacity: 1, x: 0 },
-  out: { opacity: 0, x: -20 }
+  initial: { opacity: 0, y: 8 },
+  in: { opacity: 1, y: 0 },
+  out: { opacity: 0, y: -8 }
 };
 
 export default function PaymentScreen() {
@@ -56,16 +57,16 @@ export default function PaymentScreen() {
 
   return (
     <motion.div 
-      initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: 0.3 }}
+      initial="initial" animate="in" exit="out" variants={pageVariants} transition={{ duration: DUR.component, ease: EASE.swift }}
       style={{ height: '100dvh', overflow: 'hidden', display: 'flex', flexDirection: 'column', backgroundColor: 'var(--surface-2)' }}
     >
       {/* Header */}
       <header style={{
         height: '60px', display: 'flex', alignItems: 'center', padding: '0 16px', position: 'relative', flexShrink: 0
       }}>
-        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px' }}>
+        <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', padding: '8px', cursor: 'pointer', marginLeft: '-8px', display: 'flex' }}>
           <ChevronLeft color="var(--text-primary)" size={24} />
-        </button>
+        </motion.button>
         <div style={{ flex: 1, textAlign: 'center', position: 'absolute', left: 0, right: 0, pointerEvents: 'none' }}>
           <span className="text-section-title">Pembayaran</span>
         </div>

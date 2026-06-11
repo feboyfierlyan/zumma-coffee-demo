@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Lenis from '@studio-freight/lenis';
 import { Analytics } from "@vercel/analytics/react";
+import { prefersReducedMotion } from './motion';
 
 import MenuScreen from './screens/MenuScreen';
 import CartScreen from './screens/CartScreen';
@@ -34,15 +35,17 @@ function AnimatedRoutes() {
 }
 
 function Preloader() {
-  const [loading, setLoading] = useState(true);
+  const reduced = prefersReducedMotion();
+  const [loading, setLoading] = useState(!reduced);
 
   useEffect(() => {
-    // Hold the preloader for 1.0s to allow the very fast SVG draw animation to finish
+    if (reduced) return undefined;
+    // Brief brand reveal, then straight to the menu (no onboarding friction).
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 700);
     return () => clearTimeout(timer);
-  }, []);
+  }, [reduced]);
 
   return (
     <AnimatePresence>
@@ -97,35 +100,40 @@ function Preloader() {
 
 function App() {
   useEffect(() => {
+    // Skip smooth-scroll hijacking for reduced-motion / low-end devices.
+    if (prefersReducedMotion()) return undefined;
+
     const lenis = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), // smooth easing
-      direction: 'vertical',
-      gestureDirection: 'vertical',
-      smooth: true,
-      mouseMultiplier: 1,
+      lerp: 0.075,
+      duration: 1.1,
+      smoothWheel: true,
       smoothTouch: false,
       touchMultiplier: 2,
       infinite: false,
     });
 
+    let frame;
     function raf(time) {
       lenis.raf(time);
-      requestAnimationFrame(raf);
+      frame = requestAnimationFrame(raf);
     }
+    frame = requestAnimationFrame(raf);
 
-    requestAnimationFrame(raf);
-
-    return () => lenis.destroy();
+    return () => {
+      cancelAnimationFrame(frame);
+      lenis.destroy();
+    };
   }, []);
 
   return (
     <div className="app-container">
       <Preloader />
-      <BrowserRouter>
-        <ScrollToTop />
-        <AnimatedRoutes />
-      </BrowserRouter>
+      <div className="app-frame">
+        <BrowserRouter>
+          <ScrollToTop />
+          <AnimatedRoutes />
+        </BrowserRouter>
+      </div>
       <Analytics />
     </div>
   );

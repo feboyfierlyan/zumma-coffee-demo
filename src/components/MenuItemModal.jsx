@@ -1,8 +1,29 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Plus, Minus } from 'lucide-react';
 import { formatCurrency } from '../utils/format';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import ImageWithSkeleton from './ImageWithSkeleton';
+import { EASE } from '../motion';
+
+// Quantity readout that slides up on increment / down on decrement.
+function SlidingNumber({ value, direction }) {
+  return (
+    <div style={{ position: 'relative', width: '22px', height: '22px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <AnimatePresence initial={false} mode="popLayout">
+        <motion.span
+          key={value}
+          initial={{ y: direction > 0 ? '100%' : '-100%' }}
+          animate={{ y: '0%' }}
+          exit={{ y: direction > 0 ? '-100%' : '100%' }}
+          transition={{ duration: 0.15, ease: EASE.snappy }}
+          style={{ position: 'absolute', fontSize: '16px', fontWeight: 600, color: '#1A1A1A' }}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+    </div>
+  );
+}
 
 // Aesthetic Colors for Modal
 const colors = {
@@ -41,6 +62,7 @@ const OptionButton = ({ label, selected, onClick, extra }) => (
 
 export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
   const [quantity, setQuantity] = useState(1);
+  const [qtyDir, setQtyDir] = useState(1);
   const [temperature, setTemperature] = useState('Hot');
   const [size, setSize] = useState('Regular');
   const [milk, setMilk] = useState('Whole');
@@ -125,17 +147,25 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
 
           {/* Modal Container */}
           <motion.div
-            initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+            variants={{
+              hidden: { y: '105%', transition: { duration: 0.28, ease: EASE.swift } },
+              visible: { y: 0, transition: { duration: 0.38, ease: EASE.snappy } },
+            }}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
             style={{ position: 'relative', width: '100%' }}
             onClick={(e) => e.stopPropagation()}
             drag="y"
             dragControls={dragControls}
             dragListener={false}
             dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.5 }}
+            dragElastic={{ top: 0, bottom: 0.6 }}
+            dragTransition={{ bounceStiffness: 500, bounceDamping: 40 }}
             onDragEnd={(e, info) => {
-              if (info.offset.y > 100 || info.velocity.y > 500) {
+              // Close when dragged past 40% of the sheet height (or a hard fling).
+              const threshold = (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.9 * 0.4;
+              if (info.offset.y > threshold || info.velocity.y > 700) {
                 onClose();
               }
             }}
@@ -352,18 +382,16 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
         }}>
           {/* Quantity */}
           <div style={{
-            display: 'flex', alignItems: 'center', gap: '16px',
+            display: 'flex', alignItems: 'center', gap: '8px',
             backgroundColor: '#EBE3DB', borderRadius: '24px', padding: '4px 8px', height: '48px'
           }}>
-            <button onClick={() => setQuantity(Math.max(1, quantity - 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+            <motion.button whileTap={{ scale: 0.8 }} onClick={() => { setQtyDir(-1); setQuantity(Math.max(1, quantity - 1)); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex' }}>
               <Minus size={16} color={colors.textPrimary} />
-            </button>
-            <span style={{ fontSize: '16px', fontWeight: '500', color: colors.primarySolid, minWidth: '16px', textAlign: 'center' }}>
-              {quantity}
-            </span>
-            <button onClick={() => setQuantity(quantity + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px' }}>
+            </motion.button>
+            <SlidingNumber value={quantity} direction={qtyDir} />
+            <motion.button whileTap={{ scale: 0.8 }} onClick={() => { setQtyDir(1); setQuantity(quantity + 1); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', display: 'flex' }}>
               <Plus size={16} color={colors.textPrimary} />
-            </button>
+            </motion.button>
           </div>
 
             <motion.button

@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCart } from '../context/CartContext';
+import { EASE, SPRING } from '../motion';
 
 const pageVariants = {
-  initial: { opacity: 0, scale: 0.9 },
+  initial: { opacity: 0, scale: 0.96 },
   in: { opacity: 1, scale: 1 },
-  out: { opacity: 0, scale: 1.1 }
+  out: { opacity: 0, scale: 1.04 }
 };
 
 export default function SuccessScreen() {
@@ -33,18 +33,18 @@ export default function SuccessScreen() {
     >
       <div style={{ position: 'relative', marginBottom: '24px' }}>
         <motion.div 
-          initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring', damping: 15 }}
+          initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ ...SPRING.pop, delay: 0.1 }}
         >
           <svg width="100" height="100" viewBox="0 0 100 100" fill="none">
             <motion.circle 
               cx="50" cy="50" r="40" 
               stroke="var(--accent-gold)" strokeWidth="6" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }} 
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.2, duration: 0.5, ease: EASE.smoothOut }} 
             />
             <motion.path 
               d="M30 50L45 65L70 35" 
               stroke="var(--accent-gold)" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" 
-              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.6, duration: 0.5, ease: "easeOut" }} 
+              initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.4, duration: 0.35, ease: EASE.smoothOut }} 
             />
           </svg>
         </motion.div>
