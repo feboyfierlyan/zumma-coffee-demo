@@ -5,6 +5,10 @@ import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import ImageWithSkeleton from './ImageWithSkeleton';
 import { EASE } from '../motion';
 import { buildOptionNote, getOptionConfig, computeItemPrice, defaultOptionsFor, SIZE_DELTAS, MILK_DELTAS } from '../utils/itemOptions';
+import { HotCupIcon, IcedCupIcon, CupSizeIcon, WholeMilkIcon, OatMilkIcon, AlmondMilkIcon, NoMilkIcon } from './OptionIcons';
+
+const TEMP_ICONS = { Hot: HotCupIcon, Iced: IcedCupIcon };
+const MILK_ICONS = { Whole: WholeMilkIcon, Oat: OatMilkIcon, Almond: AlmondMilkIcon, None: NoMilkIcon };
 
 // Quantity readout that slides up on increment / down on decrement.
 function SlidingNumber({ value, direction }) {
@@ -37,28 +41,33 @@ const colors = {
   primarySolid: '#1A1A1A' // Black for primary actions
 };
 
-const OptionButton = ({ label, selected, onClick, extra }) => (
-  <button
+// Illustrated option card: brand line-art icon above the label, used for the
+// temperature / size / milk selectors so each choice reads at a glance.
+const IllustratedOption = ({ icon: Icon, iconProps, label, extra, selected, onClick }) => (
+  <motion.button
+    type="button"
     onClick={onClick}
+    whileTap={{ scale: 0.96 }}
     style={{
-      padding: '10px 16px',
-      borderRadius: '12px',
-      border: selected ? `1px solid ${colors.selectedBorder}` : `1px solid ${colors.border}`,
-      backgroundColor: selected ? colors.selectedBg : '#FFFFFF',
-      color: selected ? colors.primarySolid : colors.textPrimary,
-      fontSize: '14px',
-      fontWeight: selected ? '500' : '400',
-      cursor: 'pointer',
+      flex: '1 1 0',
+      minWidth: 0,
       display: 'flex',
+      flexDirection: 'column',
       alignItems: 'center',
-      gap: '4px',
-      transition: 'all 0.2s ease-in-out',
+      gap: '7px',
+      padding: '12px 8px 10px',
+      borderRadius: '16px',
+      border: selected ? `1.5px solid ${colors.selectedBorder}` : `1px solid ${colors.border}`,
+      backgroundColor: selected ? colors.selectedBg : '#FFFFFF',
+      cursor: 'pointer',
+      transition: 'border-color 0.2s ease, background-color 0.2s ease',
       WebkitTapHighlightColor: 'transparent'
     }}
   >
-    {label}
-    {extra && <span style={{ fontSize: '12px', color: colors.textSecondary }}>{extra}</span>}
-  </button>
+    <Icon color={selected ? '#9B4A34' : '#C4C0BC'} {...iconProps} />
+    <span style={{ fontSize: '13px', fontWeight: selected ? 600 : 500, color: colors.textPrimary, lineHeight: 1 }}>{label}</span>
+    {extra && <span style={{ fontSize: '11px', color: colors.textSecondary, lineHeight: 1 }}>{extra}</span>}
+  </motion.button>
 );
 
 export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
@@ -255,7 +264,7 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>TEMPERATURE</div>
                 <div style={{ display: 'flex', gap: '12px' }}>
                   {config.temps.map((t) => (
-                    <OptionButton key={t} label={t} selected={temperature === t} onClick={() => setTemperature(t)} />
+                    <IllustratedOption key={t} icon={TEMP_ICONS[t]} label={t} selected={temperature === t} onClick={() => setTemperature(t)} />
                   ))}
                 </div>
               </div>
@@ -264,9 +273,9 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
             {config.sizes && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>SIZE</div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                  <OptionButton label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
-                  <OptionButton label="Large" extra={fmtDelta(SIZE_DELTAS.Large)} selected={size === 'Large'} onClick={() => setSize('Large')} />
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <IllustratedOption icon={CupSizeIcon} label="Regular" selected={size === 'Regular'} onClick={() => setSize('Regular')} />
+                  <IllustratedOption icon={CupSizeIcon} iconProps={{ large: true }} label="Large" extra={fmtDelta(SIZE_DELTAS.Large)} selected={size === 'Large'} onClick={() => setSize('Large')} />
                 </div>
               </div>
             )}
@@ -274,9 +283,9 @@ export default function MenuItemModal({ item, isOpen, onClose, onAddToCart }) {
             {config.milks && (
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ fontSize: '12px', letterSpacing: '1px', color: colors.textSecondary, marginBottom: '12px', fontWeight: '500' }}>MILK</div>
-                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '10px' }}>
                   {['Whole', 'Oat', 'Almond', 'None'].map(m => (
-                    <OptionButton key={m} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} />
+                    <IllustratedOption key={m} icon={MILK_ICONS[m]} label={m} extra={fmtDelta(MILK_DELTAS[m])} selected={milk === m} onClick={() => setMilk(m)} />
                   ))}
                 </div>
               </div>
