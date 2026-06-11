@@ -11,7 +11,17 @@ A comprehensive walkthrough of the application's core user flows is available in
 
 
 
-https://github.com/user-attachments/assets/f55135a7-b76e-4526-875e-f8505140bd61
+
+
+https://github.com/user-attachments/assets/69a2b790-bbb8-4b71-86a0-abce0a27e82a
+
+
+https://github.com/user-attachments/assets/11f4a237-2ed5-4ced-99f7-32fdf17c9af4
+
+
+
+
+
 
 
 
